@@ -1,7 +1,7 @@
 {
-    "name": "radial/test-core",
+    "name": "radial/test-payments-creditcard",
     "require": {
-        "radial/magento-core": "@dev",
+        "radial/magento-payments-creditcard": "@dev",
         "magento-hackathon/magento-composer-installer": "^3"
     },
     "require-dev": {

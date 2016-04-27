@@ -13,4 +13,4 @@ dependencies:
         - circle-ci/setup
 test:
     override:
-        - cd ../build && phpunit --coverage-html "$CIRCLE_ARTIFACTS/phpunit/coverage/" --log-junit "$CIRCLE_TEST_REPORTS/phpunit/magento-core.xml"
+        - cd ../build && phpunit --coverage-html "$CIRCLE_ARTIFACTS/phpunit/coverage/" --log-junit "$CIRCLE_TEST_REPORTS/phpunit/magento-payments-creditcard.xml"
