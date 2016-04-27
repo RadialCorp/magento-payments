@@ -1,0 +1,42 @@
+-
+  infoModel: payment/info
+  billingCountry: US
+  expYear: 2026
+  expMonth: 12
+  cardType: 'VI'
+  isValid: true
+-
+  infoModel: sales/order_payment
+  billingCountry: US
+  expYear: 2026
+  expMonth: 12
+  cardType: 'VI'
+  isValid: true
+-
+  infoModel: sales/order_payment
+  billingCountry: CA
+  expYear: 2026
+  expMonth: 12
+  cardType: 'VI'
+  isValid: false
+-
+  infoModel: payment/info
+  billingCountry: CA
+  expYear: 2026
+  expMonth: 12
+  cardType: 'VI'
+  isValid: false
+-
+  infoModel: payment/info
+  billingCountry: US
+  expYear: 2012
+  expMonth: 12
+  cardType: 'VI'
+  isValid: false
+-
+  infoModel: payment/info
+  billingCountry: US
+  expYear: 2026
+  expMonth: 12
+  cardType: 'SO'
+  isValid: false

@@ -1,0 +1,7 @@
+"EbayEnterprise_CreditCard_Auth_Failed", "The credit card could not be authorized, please try again."
+"EbayEnterprise_CreditCard_Avs_Failed", "Invalid billing address"
+"EbayEnterprise_CreditCard_Cvv_Failed", "Invalid card identification number"
+"EbayEnterprise_CreditCard_Method_Not_Allowed_For_Country", "Selected payment type is not allowed for billing country."
+"EbayEnterprise_CreditCard_Invalid_Expiration_Date", "Incorrect credit card expiration date."
+"EbayEnterprise_CreditCard_Unknown_Card_Type", "Card type missing tender type configuration."
+"EbayEnterprise_CreditCard_Invalid_Card_Type", "Card type is not available."
