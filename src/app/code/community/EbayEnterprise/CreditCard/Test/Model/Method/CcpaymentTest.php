@@ -110,11 +110,11 @@ class EbayEnterprise_CreditCard_Test_Model_Method_CcpaymentTest extends EbayEnte
             ->will($this->returnValue('TT'));
 
         $payment = $this->getModelMockBuilder('ebayenterprise_creditcard/method_ccpayment')
-            ->setMethods(array('_prepareApiRequest'))
+            ->setMethods(array('_prepareAuthRequest'))
             ->setConstructorArgs(array(array('core_helper' => $coreHelper, 'helper' => $ccHelper, 'checkout_session' => $this->_checkoutSession)))
             ->getMock();
         $payment->expects($this->any())
-            ->method('_prepareApiRequest')
+            ->method('_prepareAuthRequest')
             ->will($this->returnSelf());
 
         $payment->authorize($payment, $amount);
@@ -153,11 +153,11 @@ class EbayEnterprise_CreditCard_Test_Model_Method_CcpaymentTest extends EbayEnte
             ->will($this->returnValue('TT'));
 
         $payment = $this->getModelMockBuilder('ebayenterprise_creditcard/method_ccpayment')
-            ->setMethods(array('_prepareApiRequest'))
+            ->setMethods(array('_prepareAuthRequest'))
             ->setConstructorArgs(array(array('core_helper' => $coreHelper, 'helper' => $ccHelper, 'checkout_session' => $this->_checkoutSession)))
             ->getMock();
         $payment->expects($this->any())
-            ->method('_prepareApiRequest')
+            ->method('_prepareAuthRequest')
             ->will($this->returnSelf());
 
         $payment->authorize($payment, $amount);
@@ -230,7 +230,7 @@ class EbayEnterprise_CreditCard_Test_Model_Method_CcpaymentTest extends EbayEnte
         $paymentMethod = Mage::getModel('ebayenterprise_creditcard/method_ccpayment');
         $this->assertSame(
             $paymentMethod,
-            EcomDev_Utils_Reflection::invokeRestrictedMethod($paymentMethod, '_validateResponse', array($payload))
+            EcomDev_Utils_Reflection::invokeRestrictedMethod($paymentMethod, '_validateAuthResponse', array($payload))
         );
     }
 
@@ -493,7 +493,7 @@ class EbayEnterprise_CreditCard_Test_Model_Method_CcpaymentTest extends EbayEnte
         /** @var EbayEnterprise_CreditCard_Model_Method_Ccpayment $payment */
         $payment = Mage::getModel('ebayenterprise_creditcard/method_ccpayment');
 
-        $this->assertSame($payment, EcomDev_Utils_Reflection::invokeRestrictedMethod($payment, '_prepareApiRequest', [$api, $orderPayment]));
+        $this->assertSame($payment, EcomDev_Utils_Reflection::invokeRestrictedMethod($payment, '_prepareAuthRequest', [$api, $orderPayment]));
     }
 
     /**

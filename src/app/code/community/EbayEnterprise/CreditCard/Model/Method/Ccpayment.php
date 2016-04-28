@@ -43,7 +43,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
     /**
      * Is this payment method a gateway (online auth/charge) ?
      */
-    protected $_isGateway               = false;
+    protected $_isGateway               = true;
 
     /**
      * Can authorize online?
@@ -53,22 +53,22 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
     /**
      * Can capture funds online?
      */
-    protected $_canCapture              = false;
+    protected $_canCapture              = true;
 
     /**
      * Can capture partial amounts online?
      */
-    protected $_canCapturePartial       = false;
+    protected $_canCapturePartial       = true;
 
     /**
      * Can refund online?
      */
-    protected $_canRefund               = false;
+    protected $_canRefund               = true;
 
     /**
      * Can void transactions online?
      */
-    protected $_canVoid                 = false;
+    protected $_canVoid                 = true;
 
     /**
      * Can use this payment method in administration panel?
@@ -290,7 +290,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
     public function authorize(Varien_Object $payment, $amount)
     {
         $api = $this->_getApi($payment);
-        $this->_prepareApiRequest($api, $payment);
+        $this->_prepareAuthRequest($api, $payment);
         Mage::dispatchEvent('ebayenterprise_creditcard_auth_request_send_before', [
             'payload' => $api->getRequestBody(),
             'payment' => $payment,
@@ -300,15 +300,15 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         // data prior to writing the log files.
         $logMessage = 'Sending credit card auth request.';
         $cleanedRequestXml = $this->_helper->cleanAuthXml($api->getRequestBody()->serialize());
-        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['rom_request_body' => $cleanedRequestXml]));
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
         $this->_sendAuthRequest($api);
         // Log the response instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
         $logMessage = 'Received credit card auth response.';
         $cleanedResponseXml = $this->_helper->cleanAuthXml($api->getResponseBody()->serialize());
-        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['rom_response_body' => $cleanedResponseXml]));
-        $this->_handleApiResponse($api, $payment);
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
+        $this->_handleAuthResponse($api, $payment);
         return $this;
     }
     /**
@@ -318,7 +318,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @param Varien_Object         $payment Most likely a Mage_Sales_Model_Order_Payment
      * @return self
      */
-    protected function _prepareApiRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
+    protected function _prepareAuthRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
         $request = $api->getRequestBody();
         $order = $payment->getOrder();
@@ -360,7 +360,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @param Payload\Payment\ICreditCardAuthReply $response
      * @return self
      */
-    protected function _validateResponse(Payload\Payment\ICreditCardAuthReply $response)
+    protected function _validateAuthResponse(Payload\Payment\ICreditCardAuthReply $response)
     {
         // if auth was a complete success, accept the response and move on
         if ($response->getIsAuthSuccessful()) {
@@ -383,6 +383,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         // auth failed for some other reason, possibly declined, making it unacceptable
         // send user to payment step of checkout with an error message
         $this->_failPaymentAuth(self::CREDITCARD_AUTH_FAILED_MESSAGE, 'payment');
+        return $this;
     }
     /**
      * Update the order payment and quote payment with details from the CC auth
@@ -398,8 +399,8 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         Payload\Payment\ICreditCardAuthReply $response
     ) {
         return $this
-            ->_updatePayment($payment, $request, $response)
-            ->_updatePayment($payment->getOrder()->getQuote()->getPayment(), $request, $response);
+            ->_updatePaymentAuth($payment, $request, $response)
+            ->_updatePaymentAuth($payment->getOrder()->getQuote()->getPayment(), $request, $response);
     }
     /**
      * Update the payment with details from the CC Auth Request and Reply
@@ -408,7 +409,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @param Payload\Payment\ICreditCardAuthReply   $response
      * @return self
      */
-    public function _updatePayment(
+    public function _updatePaymentAuth(
         Varien_Object $payment,
         Payload\Payment\ICreditCardAuthRequest $request,
         Payload\Payment\ICreditCardAuthReply $response
@@ -445,7 +446,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
     protected function _getIsCorrectionNeededForPayment(Varien_Object $payment)
     {
         return $payment->getAdditionalInformation('is_correction_required')
-            && $payment->getCcLast4() === $payment->getAdditionalInformation('last4_to_correct');
+        && $payment->getCcLast4() === $payment->getAdditionalInformation('last4_to_correct');
     }
     /**
      * Set the checkout session's goto section to the provided step.
@@ -538,13 +539,105 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @param Varien_Object        $payment
      * @return self
      */
-    protected function _handleApiResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    protected function _handleAuthResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
         $request = $api->getRequestBody();
         $response = $api->getResponseBody();
-        return $this->_updatePaymentsWithAuthData($payment, $request, $response)->_validateResponse($response);
+        return $this->_updatePaymentsWithAuthData($payment, $request, $response)
+            ->_validateAuthResponse($response);
     }
 
+    /**
+     * Send capture request
+     *
+     * @param Mage_Sales_Model_Order_Payment $payment
+     * @param float $amount
+     * @return self
+     * @throws Mage_Core_Exception
+     */
+    public function capture(Varien_Object $payment, $amount)
+    {
+        if ($amount <= 0) {
+            Mage::throwException($this->_helper->__('Invalid amount for capture.'));
+        }
+//        $api = $this->_getApi($payment);
+//        $this->_prepareCaptureRequest($api, $payment);
+//        Mage::dispatchEvent('ebayenterprise_creditcard_capture_request_send_before', [
+//            'payload' => $api->getRequestBody(),
+//            'payment' => $payment,
+//        ]);
+        // Log the request instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+//        $logMessage = 'Sending credit card auth request.';
+//        $cleanedRequestXml = $this->_helper->cleanAuthXml($api->getRequestBody()->serialize());
+//        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+
+
+        // todo 1. load api
+        // todo 2. prepare request payload - map order/payment/address to payload
+        // todo 3. dispatch event
+        // todo 4. send request
+        // todo 5. handle response - map response to payment object
+
+        return $this;
+    }
+
+    /**
+     * Fill out the request payload with payment data and update the API request
+     * body with the complete request.
+     * @param Api\IBidirectionalApi $api
+     * @param Varien_Object         $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @return self
+     */
+    protected function _prepareCaptureRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
+    {
+        $request = $api->getRequestBody();
+        $order = $payment->getOrder();
+        // todo populate request
+        $request
+            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
+            ->setOrderId($order->getIncrementId());
+        return $this;
+    }
+    /**
+     * Void the payment
+     *
+     * @param Varien_Object $payment
+     * @return self
+     * @throws Mage_Core_Exception
+     */
+    public function void(Varien_Object $payment)
+    {
+        if (!$payment->getParentTransactionId()) {
+            Mage::throwException($this->_helper->__('Invalid transaction ID.'));
+        }
+        $this->_logger->debug($this->_helper->__('Calling method: %s', __METHOD__));
+        // todo send void request
+        return $this;
+    }
+    /**
+     * Refund the amount
+     * Need to decode Last 4 digits for request.
+     *
+     * @param Varien_Object $payment
+     * @param float $amount
+     * @return self
+     */
+    public function refund(Varien_Object $payment, $amount)
+    {
+        if ($amount <= 0) {
+            Mage::throwException($this->_helper->__('Invalid amount for refund.'));
+        }
+
+        if (!$payment->getParentTransactionId()) {
+            Mage::throwException($this->_helper->__('Invalid transaction ID.'));
+        }
+        $this->_logger->debug($this->_helper->__('Calling method %s on amount %s', __METHOD__, $amount));
+        // todo send refund request
+        return $this;
+    }
     /**
      * get shipping address with the highest subtotal amount.
      *
