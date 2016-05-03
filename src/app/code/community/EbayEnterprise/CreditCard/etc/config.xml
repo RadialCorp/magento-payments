@@ -96,8 +96,9 @@ http://opensource.org/licenses/osl-3.0.php
         </payment>
         <ebayenterprise_creditcard>
             <api>
-                <operation>creditcard/auth</operation>
                 <service>payments</service>
+                <operation_authorize>creditcard/auth</operation_authorize>
+                <operation_capture>settlement/create</operation_capture>
             </api>
         </ebayenterprise_creditcard>
     </default>

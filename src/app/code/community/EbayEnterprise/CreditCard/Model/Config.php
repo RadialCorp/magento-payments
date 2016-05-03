@@ -16,7 +16,8 @@
 class EbayEnterprise_CreditCard_Model_Config extends EbayEnterprise_Eb2cCore_Model_Config_Abstract
 {
     protected $_configPaths = array(
-        'api_operation' => 'ebayenterprise_creditcard/api/operation',
+        'api_authorize' => 'ebayenterprise_creditcard/api/operation_authorize',
+        'api_capture' => 'ebayenterprise_creditcard/api/operation_capture',
         'api_service' => 'ebayenterprise_creditcard/api/service',
         'encryption_key' => 'payment/ebayenterprise_creditcard/encryption_key',
         'tender_types' => 'ebayenterprise_creditcard/tender_types',

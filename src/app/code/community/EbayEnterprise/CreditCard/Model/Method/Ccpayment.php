@@ -289,7 +289,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      */
     public function authorize(Varien_Object $payment, $amount)
     {
-        $api = $this->_getApi($payment);
+        $api = $this->_getAuthApi($payment);
         $this->_prepareAuthRequest($api, $payment);
         Mage::dispatchEvent('ebayenterprise_creditcard_auth_request_send_before', [
             'payload' => $api->getRequestBody(),
@@ -477,13 +477,40 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @param Varien_Object $payment
      * @return Api\IBidirectionalApi
      */
-    protected function _getApi(Varien_Object $payment)
+    protected function _getAuthApi(Varien_Object $payment)
     {
         $config = $this->_helper->getConfigModel();
-        return $this->_coreHelper->getSdkApi(
+        return $this->_getApi(
             $config->apiService,
-            $config->apiOperation,
-            [$this->_helper->getTenderTypeForCcType($payment->getCcType())],
+            $config->apiAuthorize,
+            [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
+        );
+    }
+    /**
+     * Get the API SDK for the payment capture request.
+     * @param Varien_Object $payment
+     * @return Api\IBidirectionalApi
+     */
+    protected function _getCaptureApi(Varien_Object $payment)
+    {
+        $config = $this->_helper->getConfigModel();
+        return $this->_getApi(
+            $config->apiService,
+            $config->apiCapture,
+            [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
+        );
+    }
+    /**
+     * Get the API SDK.
+     * @param Varien_Object $payment
+     * @return Api\IBidirectionalApi
+     */
+    protected function _getApi($service, $operation, array $endpointParams = [])
+    {
+        return $this->_coreHelper->getSdkApi(
+            $service,
+            $operation,
+            $endpointParams,
             // Provide a logger specifically for logging data within the SDK.
             // Logger provided should prevent the logging of any PII within
             // the SDK.
@@ -560,8 +587,10 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         if ($amount <= 0) {
             Mage::throwException($this->_helper->__('Invalid amount for capture.'));
         }
-//        $api = $this->_getApi($payment);
-//        $this->_prepareCaptureRequest($api, $payment);
+        $api = $this->_getCaptureApi($payment);
+        // todo _prepareCaptureRequest
+        Mage::log(array_keys($payment->getData()));
+        //$this->_prepareCaptureRequest($api, $payment);
 //        Mage::dispatchEvent('ebayenterprise_creditcard_capture_request_send_before', [
 //            'payload' => $api->getRequestBody(),
 //            'payment' => $payment,
@@ -573,6 +602,8 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
 //        $cleanedRequestXml = $this->_helper->cleanAuthXml($api->getRequestBody()->serialize());
 //        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
 
+        // Do not close transaction unless voided.
+        $payment->setIsTransactionClosed(false);
 
         // todo 1. load api
         // todo 2. prepare request payload - map order/payment/address to payload
@@ -596,7 +627,9 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         $order = $payment->getOrder();
         // todo populate request
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setAmount($amount)
+            ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
+            ->setTaxAmount($amount)
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setOrderId($order->getIncrementId());
         return $this;
@@ -679,5 +712,30 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
             }
         );
         return $selected->getAddressId();
+    }
+
+    /**
+     * Return invoice model for transaction
+     *
+     * @param string $transactionId
+     * @return Mage_Sales_Model_Order_Invoice
+     */
+    protected function getInvoiceForTransactionId($transactionId)
+    {
+        foreach ($this->getOrder()->getInvoiceCollection() as $invoice) {
+            if ($invoice->getTransactionId() == $transactionId) {
+                $invoice->load($invoice->getId()); // to make sure all data will properly load (maybe not required)
+                return $invoice;
+            }
+        }
+        foreach ($this->getOrder()->getInvoiceCollection() as $invoice) {
+            if ($invoice->getState() == Mage_Sales_Model_Order_Invoice::STATE_OPEN
+                && $invoice->load($invoice->getId())
+            ) {
+                $invoice->setTransactionId($transactionId);
+                return $invoice;
+            }
+        }
+        return false;
     }
 }
