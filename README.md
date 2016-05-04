@@ -10,7 +10,6 @@
 
 <pre>
 { 
-   "name": "radial - magento-payment-tax-fraud", 
    "require": { 
      "radial/magento-payments-creditcard" : "^1.0" 
    }, 
