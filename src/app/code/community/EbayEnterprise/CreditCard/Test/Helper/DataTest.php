@@ -36,26 +36,26 @@ class EbayEnterprise_CreditCard_Test_Helper_DataTest extends EbayEnterprise_Eb2c
         $this->assertSame($tenderType, $helper->getTenderTypeForCcType($ccType));
     }
     /**
-     * Test cleaning the CC Auth XML to remove sensitive data - e.g. CardSecurityCode
+     * Test cleaning the CC XML to remove sensitive data - e.g. CardSecurityCode
      * and PaymentAccountUniqueId values.
      */
-    public function testCleanAuthXml()
+    public function testCleanPaymentsXml()
     {
         $xml = '<_><CardSecurityCode>123</CardSecurityCode><PaymentAccountUniqueId isToken="true"><[!CDATA[1111411AP+111111333]]></PaymentAccountUniqueId></_>';
         $this->assertSame(
             '<_><CardSecurityCode>***</CardSecurityCode><PaymentAccountUniqueId isToken="true">***</PaymentAccountUniqueId></_>',
-            Mage::helper('ebayenterprise_creditcard')->cleanAuthXml($xml)
+            Mage::helper('ebayenterprise_creditcard')->cleanPaymentsXml($xml)
         );
     }
     /**
-     * Same as self::testCleanAuthXml, just with encrypted nodes
+     * Same as self::testCleanPaymentsXml, just with encrypted nodes
      */
-    public function testCleanAuthXmlEncrypted()
+    public function testCleanPaymentsXmlEncrypted()
     {
         $xml = '<_><EncryptedCardSecurityCode>$bt4|javascript_1_3_10$ThCaUU65veFuC2A7AK4CIuM=</EncryptedCardSecurityCode><EncryptedPaymentAccountUniqueId>$bt4|javascript_1_3_10$gzIUBGAUh6MRehbaWEcw+0047SxTxc=</EncryptedPaymentAccountUniqueId></_>';
         $this->assertSame(
             '<_><EncryptedCardSecurityCode>***</EncryptedCardSecurityCode><EncryptedPaymentAccountUniqueId>***</EncryptedPaymentAccountUniqueId></_>',
-            Mage::helper('ebayenterprise_creditcard')->cleanAuthXml($xml)
+            Mage::helper('ebayenterprise_creditcard')->cleanPaymentsXml($xml)
         );
     }
     /**

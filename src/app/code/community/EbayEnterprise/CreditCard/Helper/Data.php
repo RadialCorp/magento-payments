@@ -56,7 +56,7 @@ class EbayEnterprise_CreditCard_Helper_Data extends Mage_Core_Helper_Abstract im
      * @param  string $xml
      * @return string
      */
-    public function cleanAuthXml($xml)
+    public function cleanPaymentsXml($xml)
     {
         $xml = preg_replace('#(\<(?:Encrypted)?CardSecurityCode\>).*(\</(?:Encrypted)?CardSecurityCode\>)#', '$1***$2', $xml);
         $xml = preg_replace('#(\<(?:Encrypted)?PaymentAccountUniqueId.*?\>).*(\</(?:Encrypted)?PaymentAccountUniqueId\>)#', '$1***$2', $xml);
