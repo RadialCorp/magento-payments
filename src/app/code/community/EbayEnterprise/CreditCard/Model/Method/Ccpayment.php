@@ -24,12 +24,13 @@ use Psr\Log\NullLogger;
 
 class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method_Cc
 {
-    const CREDITCARD_AUTH_FAILED_MESSAGE = 'EbayEnterprise_CreditCard_Auth_Failed';
+    const CREDITCARD_FAILED_MESSAGE = 'EbayEnterprise_CreditCard_Failed';
     const CREDITCARD_AVS_FAILED_MESSAGE = 'EbayEnterprise_CreditCard_AVS_Failed';
     const CREDITCARD_CVV_FAILED_MESSAGE = 'EbayEnterprise_CreditCard_CVV_Failed';
     const METHOD_NOT_ALLOWED_FOR_COUNTRY = 'EbayEnterprise_CreditCard_Method_Not_Allowed_For_Country';
     const INVALID_EXPIRATION_DATE = 'EbayEnterprise_CreditCard_Invalid_Expiration_Date';
     const INVALID_CARD_TYPE = 'EbayEnterprise_CreditCard_Invalid_Card_Type';
+    const SETTLEMENT_TYPE_CAPTURE = 'Debit';
     /**
      * Block type to use to render the payment method form.
      * @var string
@@ -301,7 +302,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         $logMessage = 'Sending credit card auth request.';
         $cleanedRequestXml = $this->_helper->cleanAuthXml($api->getRequestBody()->serialize());
         $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
-        $this->_sendAuthRequest($api);
+        $this->_sendRequest($api);
         // Log the response instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
@@ -368,11 +369,11 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         }
         // if AVS correction is needed, redirect to billing address step
         if ($response->getIsAVSCorrectionRequired()) {
-            $this->_failPaymentAuth(self::CREDITCARD_AVS_FAILED_MESSAGE, 'billing');
+            $this->_failPaymentRequest(self::CREDITCARD_AVS_FAILED_MESSAGE, 'billing');
         }
         // if CVV correction is needed, redirect to payment method step
         if ($response->getIsCVV2CorrectionRequired()) {
-            $this->_failPaymentAuth(self::CREDITCARD_CVV_FAILED_MESSAGE, 'payment');
+            $this->_failPaymentRequest(self::CREDITCARD_CVV_FAILED_MESSAGE, 'payment');
         }
         // if AVS & CVV did not fail but was not a complete success, see if the
         // request is at least acceptable - timeout perhaps - and if so, take it
@@ -382,7 +383,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         }
         // auth failed for some other reason, possibly declined, making it unacceptable
         // send user to payment step of checkout with an error message
-        $this->_failPaymentAuth(self::CREDITCARD_AUTH_FAILED_MESSAGE, 'payment');
+        $this->_failPaymentRequest(self::CREDITCARD_FAILED_MESSAGE, 'payment');
         return $this;
     }
     /**
@@ -467,7 +468,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @param string $returnStep Step of checkout to send the user to
      * @throws EbayEnterprise_CreditCard_Exception Always
      */
-    protected function _failPaymentAuth($errorMessage, $returnStep = 'payment')
+    protected function _failPaymentRequest($errorMessage, $returnStep = 'payment')
     {
         $this->_setCheckoutStep($returnStep);
         throw Mage::exception('EbayEnterprise_CreditCard', $this->_helper->__($errorMessage));
@@ -522,7 +523,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @param ApiIBidirectionalApi $api
      * @return self
      */
-    protected function _sendAuthRequest(Api\IBidirectionalApi $api)
+    protected function _sendRequest(Api\IBidirectionalApi $api)
     {
         $logger = $this->_logger;
         $logContext = $this->_context;
@@ -530,29 +531,28 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
             $api->send();
         } catch (InvalidPayload $e) {
             // Invalid payloads cannot be valid - log the error and fail the auth
-            $logMessage = 'Invalid payload for credit card auth. See exception log for more details.';
+            $logMessage = 'Invalid payload for credit card service. See exception log for more details.';
             $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
             $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
-            $this->_failPaymentAuth(self::CREDITCARD_AUTH_FAILED_MESSAGE);
+            $this->_failPaymentRequest(self::CREDITCARD_FAILED_MESSAGE);
         } catch (NetworkError $e) {
-            // Can't accept an auth request that could not be made successfully - log
-            // the error and fail the auth.
-            $logMessage = 'Caught a network error sending credit card auth. See exception log for more details.';
+            // Can't accept a request that could not be made successfully - log the error and fail the request.
+            $logMessage = 'Caught a network error sending credit card service. See exception log for more details.';
             $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
             $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
-            $this->_failPaymentAuth(self::CREDITCARD_AUTH_FAILED_MESSAGE);
+            $this->_failPaymentRequest(self::CREDITCARD_FAILED_MESSAGE);
         } catch (UnsupportedOperation $e) {
-            $logMessage = 'The credit card auth operation is unsupported in the current configuration. See exception log for more details.';
+            $logMessage = 'The credit card service operation is unsupported in the current configuration. See exception log for more details.';
             $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
             $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
             throw $e;
         } catch (UnsupportedHttpAction $e) {
-            $logMessage = 'The credit card auth operation is configured with an unsupported HTTP action. See exception log for more details.';
+            $logMessage = 'The credit card service operation is configured with an unsupported HTTP action. See exception log for more details.';
             $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
             $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
             throw $e;
         } catch (Exception $e) {
-            $logMessage = 'Encountered unexpected exception from the credit card auth operation. See exception log for more details.';
+            $logMessage = 'Encountered unexpected exception from the credit card service operation. See exception log for more details.';
             $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
             $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
             throw $e;
@@ -588,32 +588,90 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
             Mage::throwException($this->_helper->__('Invalid amount for capture.'));
         }
         $api = $this->_getCaptureApi($payment);
-        // todo _prepareCaptureRequest
-        Mage::log(array_keys($payment->getData()));
-        //$this->_prepareCaptureRequest($api, $payment);
-//        Mage::dispatchEvent('ebayenterprise_creditcard_capture_request_send_before', [
-//            'payload' => $api->getRequestBody(),
-//            'payment' => $payment,
-//        ]);
+        $this->_prepareCaptureRequest($api, $payment);
+        Mage::dispatchEvent('ebayenterprise_creditcard_capture_request_send_before', [
+            'payload' => $api->getRequestBody(),
+            'payment' => $payment,
+        ]);
         // Log the request instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-//        $logMessage = 'Sending credit card auth request.';
-//        $cleanedRequestXml = $this->_helper->cleanAuthXml($api->getRequestBody()->serialize());
-//        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+        $logMessage = 'Sending credit card capture request.';
+        $cleanedRequestXml = $this->_helper->cleanAuthXml($api->getRequestBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+        $this->_sendRequest($api);
+        // Log the response instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Received credit card capture response.';
+        $cleanedResponseXml = $this->_helper->cleanAuthXml($api->getResponseBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
+        $this->_handleCaptureResponse($api, $payment);
+        return $this;
+    }
+    /**
+     * Update payment objects with details of the capture request and response. Validate
+     * that a successful response was received.
+     * @param ApiIBidirectionalApi $api
+     * @param Varien_Object        $payment
+     * @return self
+     */
+    protected function _handleCaptureResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    {
+        $request = $api->getRequestBody();
+        $response = $api->getResponseBody();
+        return $this->_updatePaymentsWithCaptureData($payment, $request, $response)
+            ->_validateCaptureResponse($response);
+    }
+    /**
+     * Check for the response to be valid.
+     * @param Payload\Payment\ICreditCardAuthReply $response
+     * @return self
+     */
+    protected function _validateCaptureResponse(Payload\Payment\ICreditCardAuthReply $response)
+    {
+        if (true) { // todo validate
+            return $this;
+        }
+        // auth failed for some other reason, possibly declined, making it unacceptable
+        // send user to payment step of checkout with an error message
+        $this->_failPaymentRequest(self::CREDITCARD_FAILED_MESSAGE, 'payment');
+        return $this;
+    }
+    /**
+     * Update the order payment and quote payment with details from the CC auth
+     * request/response.
+     * @param Varien_Data $payment
+     * @param Payload\Payment\ICreditCardAuthRequest $request
+     * @param Payload\Payment\ICreditCardAuthReply   $response
+     * @return self
+     */
+    protected function _updatePaymentsWithCaptureData(
+        Varien_Object $payment,
+        Payload\Payment\ICreditCardAuthRequest $request,
+        Payload\Payment\ICreditCardAuthReply $response
+    ) {
+        return $this
+            ->_updatePaymentCapture($payment, $request, $response)
+            ->_updatePaymentCapture($payment->getOrder()->getQuote()->getPayment(), $request, $response);
+    }
+    /**
+     * Update the payment with details from the CC Capture Request and Reply
+     * @param Varien_Object                          $payment
+     * @param Payload\Payment\ICreditCardAuthRequest $request
+     * @param Payload\Payment\ICreditCardAuthReply   $response
+     * @return self
+     */
+    public function _updatePaymentCapture(
+        Varien_Object $payment,
+        Payload\Payment\ICreditCardAuthRequest $request,
+        Payload\Payment\ICreditCardAuthReply $response
+    ) {
 
         // Do not close transaction unless voided.
         $payment->setIsTransactionClosed(false);
-
-        // todo 1. load api
-        // todo 2. prepare request payload - map order/payment/address to payload
-        // todo 3. dispatch event
-        // todo 4. send request
-        // todo 5. handle response - map response to payment object
-
         return $this;
     }
-
     /**
      * Fill out the request payload with payment data and update the API request
      * body with the complete request.
@@ -624,15 +682,34 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
     protected function _prepareCaptureRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
         $request = $api->getRequestBody();
+        /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
+        /** @var Mage_Sales_Model_Order_Invoice $invoice */
+        $invoice = $this->getPaymentInvoice($payment);
         // todo populate request
         $request
-            ->setAmount($amount)
+            ->setAmount($invoice->getGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
-            ->setTaxAmount($amount)
+            ->setTaxAmount($invoice->getTaxAmount())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
+            ->setSettlementType(self::SETTLEMENT_TYPE_CAPTURE)
+            ->setFinalDebit($this->isFinalDebit($order))
             ->setOrderId($order->getIncrementId());
         return $this;
+    }
+
+    protected function isFinalDebit(Mage_Sales_Model_Order $order)
+    {
+        return $order->getTotalDue() > 0;
+    }
+
+    protected function getPaymentInvoice(Mage_Sales_Model_Order_Payment $payment)
+    {
+        $order = $payment->getOrder();
+        /** @var Mage_Sales_Model_Resource_Order_Invoice_Collection $invoiceCollection */
+        $invoiceCollection = $order->getInvoiceCollection();
+        $invoiceCollection->addFieldToFilter('transaction_id', $payment->getTransactionId());
+        return $invoiceCollection->getFirstItem();
     }
     /**
      * Void the payment

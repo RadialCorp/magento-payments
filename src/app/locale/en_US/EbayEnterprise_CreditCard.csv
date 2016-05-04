@@ -1,4 +1,4 @@
-"EbayEnterprise_CreditCard_Auth_Failed", "The credit card could not be authorized, please try again."
+"EbayEnterprise_CreditCard_Failed", "The credit card could not be processed, please try again."
 "EbayEnterprise_CreditCard_Avs_Failed", "Invalid billing address"
 "EbayEnterprise_CreditCard_Cvv_Failed", "Invalid card identification number"
 "EbayEnterprise_CreditCard_Method_Not_Allowed_For_Country", "Selected payment type is not allowed for billing country."
