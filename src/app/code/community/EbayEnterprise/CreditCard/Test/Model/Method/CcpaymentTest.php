@@ -546,7 +546,7 @@ class EbayEnterprise_CreditCard_Test_Model_Method_CcpaymentTest extends EbayEnte
 
         EcomDev_Utils_Reflection::invokeRestrictedMethod(
             $payment,
-            '_sendAuthRequest',
+            '_sendRequest',
             [$api]
         );
     }
