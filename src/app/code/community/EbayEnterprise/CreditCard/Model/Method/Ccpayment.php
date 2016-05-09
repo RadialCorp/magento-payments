@@ -574,6 +574,108 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
             ->_validateAuthResponse($response);
     }
     /**
+     * Send confirm funds request
+     *
+     * @param Mage_Sales_Model_Order_Payment $payment
+     * @param float $amount
+     * @return self
+     * @throws Mage_Core_Exception
+     */
+    public function confirm(Varien_Object $payment, $amount)
+    {
+        if ($amount <= 0) {
+            Mage::throwException($this->_helper->__('Invalid amount to confirm funds.'));
+        }
+        $api = $this->_getConfirmFundsApi($payment);
+        $this->_prepareConfirmFundsRequest($api, $payment, $amount);
+        Mage::dispatchEvent('ebayenterprise_creditcard_confirm_funds_send_before', [
+            'payload' => $api->getRequestBody(),
+            'payment' => $payment,
+        ]);
+        // Log the request instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Sending credit card confirm funds request.';
+        $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+        $this->_sendRequest($api);
+        // Log the response instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Received credit card confirm funds response.';
+        $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
+        $this->_handleConfirmFundsResponse($api, $payment);
+        return $this;
+    }
+    /**
+     * Update payment objects with details of the confirm request and response. Validate
+     * that a successful response was received.
+     * @param Api\IBidirectionalApi $api
+     * @param Varien_Object        $payment
+     * @return self
+     */
+    protected function _handleConfirmFundsResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    {
+        /** @var Payload\Payment\ConfirmFundsReply $response */
+        $response = $api->getResponseBody();
+        return $this->_validateConfirmFundsResponse($response);
+    }
+    /**
+     * Check for the response to be valid.
+     * @param Payload\Payment\IConfirmFundsReply $response
+     * @return self
+     */
+    protected function _validateConfirmFundsResponse(Payload\Payment\IConfirmFundsReply $response)
+    {
+        // if auth was a complete success, accept the response and move on
+        if ($response->isSuccess()) {
+            return $this;
+        }
+        // auth failed for some other reason, possibly declined, making it unacceptable
+        // send user to payment step of checkout with an error message
+        $this->_failPaymentRequest(self::CREDITCARD_FAILED_MESSAGE, 'payment');
+        return $this;
+    }
+    /**
+     * Fill out the request payload with payment data and update the API request
+     * body with the complete request.
+     * @param Api\IBidirectionalApi $api
+     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param $amount
+     * @return static
+     */
+    protected function _prepareConfirmFundsRequest(Api\IBidirectionalApi $api, Varien_Object $payment, $amount)
+    {
+        /** @var Payload\Payment\ConfirmFundsRequest $request */
+        $request = $api->getRequestBody();
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        $request
+            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setPanIsToken(true)
+            ->setAmount((float)$amount)
+            ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
+            ->setCardNumber($payment->getCcNumber())
+            ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
+            ->setOrderId($order->getIncrementId());
+        return $this;
+    }
+    /**
+     * Get the API SDK for the payment confirm funds request.
+     * @param Varien_Object $payment
+     * @return Api\IBidirectionalApi
+     */
+    protected function _getConfirmFundsApi(Varien_Object $payment)
+    {
+        $config = $this->_helper->getConfigModel();
+        return $this->_getApi(
+            $config->apiService,
+            $config->apiConfirmFunds,
+            [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
+        );
+    }
+    /**
      * Send capture request
      *
      * @param Mage_Sales_Model_Order_Payment $payment
@@ -608,13 +710,13 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         $this->_handleCaptureResponse($api, $payment);
         return $this;
     }
+
     /**
      * Fill out the request payload with payment data and update the API request
      * body with the complete request.
      * @param Api\IBidirectionalApi $api
-     * @param Varien_Object         $payment Most likely a Mage_Sales_Model_Order_Payment
-     * @return self
-     *
+     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @return static
      */
     protected function _prepareCaptureRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
@@ -623,51 +725,62 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
         /** @var Mage_Sales_Model_Order_Invoice $invoice */
-        $invoice = $this->getLastInvoice($order);
+        // Invoice has been assigned to payment.
+        // @see EbayEnterprise_Payments_Model_Observer::handleInvoiceCaptureEvent
+        $invoice = $payment->getInvoiceForCapture();
+        $amountToCapture = $invoice->getGrandTotal();
         $request
             ->setIsEncrypted($this->_isUsingClientSideEncryption)
             ->setPanIsToken(true)
-            ->setAmount((float)$invoice->getGrandTotal())
+            ->setAmount((float)$amountToCapture)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setTaxAmount((float)$invoice->getTaxAmount())
             ->setClientContext($payment->getTransactionId())
             ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_CAPTURE)
-            ->setFinalDebit($this->isFinalDebit($order))
+            ->setFinalDebit($this->isFinalDebit($payment, $amountToCapture) ? 1 : 0)
             ->setOrderId($order->getIncrementId());
         return $this;
     }
     /**
-     * Update payment objects with details of the capture request and response. Validate
-     * that a successful response was received.
      * @param Api\IBidirectionalApi $api
      * @param Varien_Object        $payment
      * @return self
      */
     protected function _handleCaptureResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
-        // Keep the invoice state open until payment service responds
-        $payment->setForcedState(Mage_Sales_Model_Order_Invoice::STATE_OPEN);
         return $this;
     }
     /**
-     * @param Mage_Sales_Model_Order $order
+     * @param Varien_Object $payment
+     * @param $amountToCapture
      * @return bool
      */
-    protected function isFinalDebit(Mage_Sales_Model_Order $order)
+    protected function isFinalDebit(Varien_Object $payment, $amountToCapture)
     {
-        return $order->getTotalDue() <= 0 ? 1 : 0;
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        $amountToCapture = $this->_formatAmount($amountToCapture);
+        $orderGrandTotal = $this->_formatAmount($order->getBaseGrandTotal());
+        if ($orderGrandTotal == $this->_formatAmount($payment->getBaseAmountPaid()) + $amountToCapture) {
+            if (false !== $payment->getShouldCloseParentTransaction()) {
+                $payment->setShouldCloseParentTransaction(true);
+            }
+            return true;
+        }
+        return false;
     }
     /**
-     * @param Mage_Sales_Model_Order $order
-     * @return Varien_Object
+     * Round up and cast specified amount to float or string
+     *
+     * @param string|float $amount
+     * @param bool $asFloat
+     * @return string|float
      */
-    protected function getLastInvoice(Mage_Sales_Model_Order $order)
+    protected function _formatAmount($amount)
     {
-        /** @var Mage_Sales_Model_Resource_Order_Invoice_Collection $invoiceCollection */
-        $invoiceCollection = $order->getInvoiceCollection();
-        return $invoiceCollection->getLastItem();
+        return Mage::app()->getStore()->roundPrice($amount);
     }
     /**
      * Void the payment
