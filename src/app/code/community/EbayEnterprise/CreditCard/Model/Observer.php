@@ -31,4 +31,17 @@ class EbayEnterprise_CreditCard_Model_Observer
             ->addPaymentsToPayload($order, $paymentContainer, $processedPayments);
         return $this;
     }
+    /**
+     * handle payment settlement status event
+     * request.
+     * @param  Varien_Event_Observer $observer
+     * @return self
+     */
+    public function handlePaymentSettlementsStatusEvent(Varien_Event_Observer $observer)
+    {
+        Mage::getModel(
+            'ebayenterprise_creditcard/events_settlementStatus', 
+            ['payload' => $observer->getEvent()->getPayload()]
+        )->process();
+    }
 }

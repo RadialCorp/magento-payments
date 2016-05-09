@@ -44,6 +44,15 @@ http://opensource.org/licenses/osl-3.0.php
                     </ebayenterprise_creditcard_order_create_payment_observer>
                 </observers>
             </ebayenterprise_order_create_payment>
+            <ebayenterprise_amqp_message_payments_settlements_status>
+                <observers>
+                    <ebayenterprise_creditcard_payments_settlements_status_observer>
+                        <type>model</type>
+                        <class>ebayenterprise_creditcard/observer</class>
+                        <method>handlePaymentSettlementsStatusEvent</method>
+                    </ebayenterprise_creditcard_payments_settlements_status_observer>
+                </observers>
+            </ebayenterprise_amqp_message_payments_settlements_status>
         </events>
     </global>
     <frontend>
