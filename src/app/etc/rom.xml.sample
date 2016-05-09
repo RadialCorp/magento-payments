@@ -19,27 +19,6 @@ http://opensource.org/licenses/osl-3.0.php
     <crontab>
         <jobs>
             <!--
-            Order Retry: This job will attempt to resubmit any orders that were unable to be placed due to the
-            unavailability of the ROM API.
-
-            Suggested Schedule: Once every fifteen minutes
-            -->
-            <ebayenterprise_order_create_retry>
-                <schedule>
-                    <cron_expr>*/15 * * * *</cron_expr>
-                </schedule>
-            </ebayenterprise_order_create_retry>
-            <!--
-            Image Export: This job will export image meta data to the Product Hub.
-
-            Suggested Schedule: Once every fifteen minutes
-            -->
-            <ebayenterprise_productimageexport>
-                <schedule>
-                    <cron_expr>*/15 * * * *</cron_expr>
-                </schedule>
-            </ebayenterprise_productimageexport>
-            <!--
             AMQP Queue Process: This job will request new messages from the ROM message queues.
 
             Suggested Schedule: As often as possible
@@ -62,18 +41,6 @@ http://opensource.org/licenses/osl-3.0.php
                 <flatrate_flatrate>ANY_STD</flatrate_flatrate>
             </shipmap>
         </eb2ccore>
-        <ebayenterprise_inventory>
-            <details>
-                <!-- Template to use to display the estimated delivery date. -->
-                <estimated_delivery_template>You can expect to receive your item%s between %s and %s.</estimated_delivery_template>
-            </details>
-        </ebayenterprise_inventory>
-        <ebayenterprise_tax>
-            <tax_class>
-                <!-- tax class to use for the shipping price group -->
-                <shipping>93000</shipping>
-            </tax_class>
-        </ebayenterprise_tax>
         <!--
         Message Queue: Configuration to fetch messages from the ROM message queue. Unless otherwise noted, the provided
         sample values should suffice for most uses.
@@ -119,11 +86,11 @@ http://opensource.org/licenses/osl-3.0.php
             </connection>
             <queue>
                 <!--
-                Message Queue Names: List the ROM message queues. Queue names containing {store_id} will have the
+                Message Queue Names: List the PTF message queues. Queue names containing {store_id} will have the
                 placeholder replaced by the current configured store id.
                 -->
                 <queue_names>
-                    <orders>q.Order.Event.{store_id}</orders>
+                    <settlements>q.Payments.Settlements.Status.{store_id}</settlements>
                 </queue_names>
                 <passive>0</passive>
                 <durable>1</durable>
@@ -146,43 +113,5 @@ http://opensource.org/licenses/osl-3.0.php
                 <VI>VC</VI>
             </tender_types>
         </ebayenterprise_creditcard>
-        <ebayenterprise_order>
-            <create>
-                <gender_map>
-                    <!--
-                        Map customer gender options to the Appropriate ROM Values.
-                        Invalid mappings are ignored.
-                        Currently ROM supports 'M' and 'F' as valid values.
-                    -->
-                    <Male>M</Male>
-                    <Female>F</Female>
-                </gender_map>
-            </create>
-            <cancel>
-                <reason_map>
-                    <!--
-                    Map possible reasons for a customer to select from when canceling their order.
-                    -->
-                    <CWS>Wrong size or color</CWS>
-                    <EP>Buyer's remorse</EP>
-                    <YD>Duplicate order</YD>
-                    <OTH>Other</OTH>
-                </reason_map>
-            </cancel>
-        </ebayenterprise_order>
-        <ebayenterprise_paypal>
-            <url>
-                <!-- logo image for category pages -->
-                <logo_image_src>https://www.paypalobjects.com/{locale_code}/i/bnr/bnr_{logo_type}.gif</logo_image_src>
-                <!-- paypal about page -->
-                <logo_about_page_uri>https://www.paypal.com/{locale_code}/cgi-bin/webscr?cmd=xpt/Marketing/popup/OLCWhatIsPayPal-outside</logo_about_page_uri>
-                <!-- checkout payment method option image -->
-                <mark_image_src>https://www.paypalobjects.com/webstatic/{locale_code}/i/buttons/pp-acceptance-medium.png</mark_image_src>
-                <!-- express checkout button on the product and cart pages -->
-                <shortcut_express_checkout_button>https://www.paypalobjects.com/webstatic/{locale_code}/i/buttons/checkout-logo-medium.png</shortcut_express_checkout_button>
-                <!-- What is PayPal link on express payment method in checkout -->
-                <what_is_page_url>https://www.paypal.com/us/cgi-bin/webscr?cmd=xpt/Marketing/popup/OLCWhatIsPayPal-outside</what_is_page_url>
-            </url>
-        </ebayenterprise_paypal>
     </default>
 </config>
