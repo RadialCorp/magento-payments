@@ -647,6 +647,8 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      */
     protected function _handleCaptureResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
+        // Keep the invoice state open until payment service responds
+        $payment->setForcedState(Mage_Sales_Model_Order_Invoice::STATE_OPEN);
         return $this;
     }
     /**
