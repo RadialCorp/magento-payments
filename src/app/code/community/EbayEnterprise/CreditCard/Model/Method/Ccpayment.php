@@ -31,6 +31,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
     const INVALID_EXPIRATION_DATE = 'EbayEnterprise_CreditCard_Invalid_Expiration_Date';
     const INVALID_CARD_TYPE = 'EbayEnterprise_CreditCard_Invalid_Card_Type';
     const SETTLEMENT_TYPE_CAPTURE = 'Debit';
+    const SETTLEMENT_TYPE_REFUND = 'Credit';
     /**
      * Block type to use to render the payment method form.
      * @var string
@@ -492,12 +493,12 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @param Varien_Object $payment
      * @return Api\IBidirectionalApi
      */
-    protected function _getCaptureApi(Varien_Object $payment)
+    protected function _getSettlementApi(Varien_Object $payment)
     {
         $config = $this->_helper->getConfigModel();
         return $this->_getApi(
             $config->apiService,
-            $config->apiCapture,
+            $config->apiSettlement,
             [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
         );
     }
@@ -688,7 +689,7 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         if ($amount <= 0) {
             Mage::throwException($this->_helper->__('Invalid amount for capture.'));
         }
-        $api = $this->_getCaptureApi($payment);
+        $api = $this->_getSettlementApi($payment);
         $this->_prepareCaptureRequest($api, $payment);
         Mage::dispatchEvent('ebayenterprise_creditcard_capture_request_send_before', [
             'payload' => $api->getRequestBody(),
@@ -710,12 +711,12 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         $this->_handleCaptureResponse($api, $payment);
         return $this;
     }
-
     /**
      * Fill out the request payload with payment data and update the API request
      * body with the complete request.
      * @param Api\IBidirectionalApi $api
      * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param string $type
      * @return static
      */
     protected function _prepareCaptureRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
@@ -749,6 +750,15 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
      * @return self
      */
     protected function _handleCaptureResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    {
+        return $this;
+    }
+    /**
+     * @param Api\IBidirectionalApi $api
+     * @param Varien_Object        $payment
+     * @return self
+     */
+    protected function _handleRefundResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
         return $this;
     }
@@ -811,53 +821,74 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         if ($amount <= 0) {
             Mage::throwException($this->_helper->__('Invalid amount for refund.'));
         }
-
         if (!$payment->getParentTransactionId()) {
             Mage::throwException($this->_helper->__('Invalid transaction ID.'));
         }
-        $this->_logger->debug($this->_helper->__('Calling method %s on amount %s', __METHOD__, $amount));
-        // todo send refund request
+        $api = $this->_getSettlementApi($payment);
+        $this->_prepareRefundRequest($api, $payment);
+        Mage::dispatchEvent('ebayenterprise_creditcard_refund_request_send_before', [
+            'payload' => $api->getRequestBody(),
+            'payment' => $payment,
+        ]);
+        // Log the request instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Sending credit card refund request.';
+        $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+        $this->_sendRequest($api);
+        // Log the response instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Received credit card refund response.';
+        $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
+        $this->_handleRefundResponse($api, $payment);
         return $this;
     }
     /**
-     * get shipping address with the highest subtotal amount.
-     *
-     * @param Mage_Sales_Model_Order
-     * @return Mage_Sales_Model_Order_Address|null
+     * Fill out the request payload with payment data and update the API request
+     * body with the complete request.
+     * @param Api\IBidirectionalApi $api
+     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param string $type
+     * @return static
      */
-    protected function getPrimaryShippingAddress(Mage_Sales_Model_Order $order)
+    protected function _prepareRefundRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
-        $collection = $order->getAddressesCollection();
-        $address = $collection->getItemByColumnValue(
-            'quote_address_id',
-            $this->getQuotePrimaryShippingAddressId($order->getQuote())
-        );
-        return $address;
+        /** @var Payload\Payment\PaymentSettlementRequest $request */
+        $request = $api->getRequestBody();
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        /** @var Mage_Sales_Model_Order_Invoice $invoice */
+        // Invoice has been assigned to payment.
+        // @see self::_prepareSettlementRequest
+        $invoice = $payment->getInvoiceForCapture();
+        $amountToCapture = $invoice->getGrandTotal();
+        $request
+            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setPanIsToken(true)
+            ->setAmount((float)$amountToCapture)
+            ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
+            ->setTaxAmount((float)$invoice->getTaxAmount())
+            ->setClientContext($payment->getParentTransactionId())
+            ->setCardNumber($payment->getCcNumber())
+            ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
+            ->setSettlementType(self::SETTLEMENT_TYPE_REFUND)
+            ->setFinalDebit(0)
+            ->setOrderId($order->getIncrementId());
+        return $this;
     }
     /**
-     * get the quote address id for the address with the highest subtotal
-     * amount
-     *
-     * @param Mage_Sales_Model_Quote
-     * @return int
+     * @param Mage_Sales_Model_Order_Invoice $invoice
+     * @param Mage_Sales_Model_Order_Payment $payment
+     * @return Mage_Payment_Model_Method_Abstract
      */
-    protected function getQuotePrimaryShippingAddressId(Mage_Sales_Model_Quote $quote)
+    public function processBeforeRefund($invoice, $payment)
     {
-        $addresses = $quote->getAllShippingAddresses();
-        $selected = array_reduce(
-            $addresses,
-            function (
-                Mage_Sales_Model_Quote_Address $current = null,
-                Mage_Sales_Model_Quote_Address $address
-            ) {
-                if (!$current) {
-                    $current = $address;
-                }
-                return $address->getBaseSubtotal() > $current->getBaseSubtotal()
-                    ? $address
-                    : $current;
-            }
-        );
-        return $selected->getAddressId();
+        // Invoice has been assigned to payment.
+        // @see self::_prepareSettlementRequest
+        $payment->setInvoiceForCapture($invoice);
+        return parent::processBeforeRefund($invoice, $payment);
     }
 }
