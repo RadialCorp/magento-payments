@@ -503,6 +503,20 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         );
     }
     /**
+     * Get the API SDK for the payment auth cancel request.
+     * @param Varien_Object $payment
+     * @return Api\IBidirectionalApi
+     */
+    protected function _getAuthCancelApi(Varien_Object $payment)
+    {
+        $config = $this->_helper->getConfigModel();
+        return $this->_getApi(
+            $config->apiService,
+            $config->apiAuthCancel,
+            [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
+        );
+    }
+    /**
      * Get the API SDK.
      * @param Varien_Object $payment
      * @return Api\IBidirectionalApi
@@ -745,11 +759,43 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         return $this;
     }
     /**
+     * Fill out the request payload with payment data and update the API request
+     * body with the complete request.
+     * @param Api\IBidirectionalApi $api
+     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param string $type
+     * @return static
+     */
+    protected function _prepareAuthCancelRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
+    {
+        /** @var Payload\Payment\PaymentSettlementRequest $request */
+        $request = $api->getRequestBody();
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        $amountAuthorized = $order->getBaseGrandTotal();
+        $request
+            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setPanIsToken(true)
+            ->setAmount((float)$amountAuthorized)
+            ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
+            ->setOrderId($order->getIncrementId());
+        return $this;
+    }
+    /**
      * @param Api\IBidirectionalApi $api
      * @param Varien_Object        $payment
      * @return self
      */
     protected function _handleCaptureResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    {
+        return $this;
+    }
+    /**
+     * @param Api\IBidirectionalApi $api
+     * @param Varien_Object        $payment
+     * @return self
+     */
+    protected function _handleAuthCancelResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
         return $this;
     }
@@ -805,7 +851,26 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
             Mage::throwException($this->_helper->__('Invalid transaction ID.'));
         }
         $this->_logger->debug($this->_helper->__('Calling method: %s', __METHOD__));
-        // todo send void request
+        $api = $this->_getAuthCancelApi($payment);
+        $this->_prepareAuthCancelRequest($api, $payment);
+        Mage::dispatchEvent('ebayenterprise_creditcard_auth_cancel_request_send_before', [
+            'payload' => $api->getRequestBody(),
+            'payment' => $payment,
+        ]);
+        // Log the request instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Sending credit card auth cancel request.';
+        $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+        $this->_sendRequest($api);
+        // Log the response instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Received credit card auth cancel response.';
+        $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
+        $this->_handleAuthCancelResponse($api, $payment);
         return $this;
     }
     /**
