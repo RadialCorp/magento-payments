@@ -860,10 +860,10 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         $request = $api->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
+        // @see Mage_Sales_Model_Order_Payment::refund
+        $creditmemo = $payment->getCreditmemo();
         /** @var Mage_Sales_Model_Order_Invoice $invoice */
-        // Invoice has been assigned to payment.
-        // @see self::_prepareSettlementRequest
-        $invoice = $payment->getInvoiceForCapture();
+        $invoice = $creditmemo->getInvoice();
         $amountToCapture = $invoice->getGrandTotal();
         $request
             ->setIsEncrypted($this->_isUsingClientSideEncryption)
