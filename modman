@@ -16,3 +16,4 @@ src/js/* js/
 
 # Locale
 src/app/locale/en_US/EbayEnterprise_CreditCard.csv app/locale/en_US/EbayEnterprise_CreditCard.csv
+src/app/locale/en_US/EbayEnterprise_CreditCard.csv app/locale/en_US/EbayEnterprise_PayPal.csv
