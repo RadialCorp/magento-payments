@@ -21,10 +21,6 @@ class EbayEnterprise_CreditCard_Model_Events_SettlementStatus
     protected $_logger;
     /** @var EbayEnterprise_MageLog_Helper_Context */
     protected $_context;
-    /** @var Mage_Sales_Model_Order_Creditmemo */
-    protected $_creditMemo;
-    /** @var Mage_Sales_Model_Order */
-    protected $_order;
     /**
      * @param array $initParams Must include the payload key:
      *                          - 'payload' => OrderEvents\OrderCreditIssued
