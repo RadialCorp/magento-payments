@@ -44,9 +44,9 @@ class EbayEnterprise_Paypal_Test_Helper_RegionTest extends EbayEnterprise_Eb2cCo
         EcomDev_Utils_Reflection::setRestrictedPropertyValue($regionHelper, 'regionResource', $regionResource);
 
         // rewrite model with mocked region directory
-        $regionDirectory = $this->getModelMock('directory/region');
-        $regionDirectory->method('getId')->will($this->returnValue(self::REGION_ID));
-        $regionDirectory->method('getCode')->will($this->returnValue(self::REGION_CODE));
+        $regionDirectory = $this->getModelMock('directory/region', ['getId', 'getCode']);
+        $regionDirectory->expects($this->any())->method('getId')->will($this->returnValue(self::REGION_ID));
+        $regionDirectory->expects($this->any())->method('getCode')->will($this->returnValue(self::REGION_CODE));
         $this->replaceByMock('model', 'directory/region', $regionDirectory);
 
         // mutate the quote address
