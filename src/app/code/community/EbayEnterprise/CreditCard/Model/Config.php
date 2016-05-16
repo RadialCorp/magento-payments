@@ -19,6 +19,7 @@ class EbayEnterprise_CreditCard_Model_Config extends EbayEnterprise_Eb2cCore_Mod
         'api_authorize' => 'ebayenterprise_creditcard/api/operation_authorize',
         'api_confirm_funds' => 'ebayenterprise_creditcard/api/operation_confirm',
         'api_settlement' => 'ebayenterprise_creditcard/api/operation_capture',
+        'api_cancel' => 'ebayenterprise_creditcard/api/operation_cancel',
         'api_service' => 'ebayenterprise_creditcard/api/service',
         'encryption_key' => 'payment/ebayenterprise_creditcard/encryption_key',
         'tender_types' => 'ebayenterprise_creditcard/tender_types',
