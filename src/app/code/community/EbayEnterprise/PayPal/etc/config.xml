@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2013-2014 eBay Enterprise, Inc.
+
+NOTICE OF LICENSE
+
+This source file is subject to the Open Software License (OSL 3.0)
+that is bundled with this package in the file LICENSE.md.
+It is also available through the world-wide-web at this URL:
+http://opensource.org/licenses/osl-3.0.php
+
+@copyright   Copyright (c) 2013-2014 eBay Enterprise, Inc. (http://www.ebayenterprise.com/)
+@license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+-->
+<config>
+    <modules>
+        <EbayEnterprise_PayPal>
+            <version>1.4.0</version>
+        </EbayEnterprise_PayPal>
+    </modules>
+    <global>
+        <models>
+            <ebayenterprise_paypal>
+                <class>EbayEnterprise_PayPal_Model</class>
+            </ebayenterprise_paypal>
+        </models>
+        <blocks>
+            <ebayenterprise_paypal>
+                <class>EbayEnterprise_PayPal_Block</class>
+            </ebayenterprise_paypal>
+        </blocks>
+        <helpers>
+            <ebayenterprise_paypal>
+                <class>EbayEnterprise_PayPal_Helper</class>
+            </ebayenterprise_paypal>
+        </helpers>
+        <events>
+            <ebayenterprise_order_create_payment>
+                <observers>
+                    <ebayenterprise_paypal_order_create_payment_observer>
+                        <type>model</type>
+                        <class>ebayenterprise_paypal/observer</class>
+                        <method>handleOrderCreatePaymentEvent</method>
+                    </ebayenterprise_paypal_order_create_payment_observer>
+                </observers>
+            </ebayenterprise_order_create_payment>
+            <ebayenterprise_order_create_context>
+                <observers>
+                    <ebayenterprise_paypal_order_create_context_observer>
+                        <type>model</type>
+                        <class>ebayenterprise_paypal/observer</class>
+                        <method>handleOrderCreateContextEvent</method>
+                    </ebayenterprise_paypal_order_create_context_observer>
+                </observers>
+            </ebayenterprise_order_create_context>
+        </events>
+    </global>
+    <frontend>
+        <routers>
+            <ebayenterprise_paypal_express>
+                <use>standard</use>
+                <args>
+                    <module>EbayEnterprise_PayPal</module>
+                    <frontName>paypal-express</frontName>
+                </args>
+            </ebayenterprise_paypal_express>
+        </routers>
+        <layout>
+            <updates>
+                <ebayenterprise_paypal module="EbayEnterprise_PayPal">
+                    <file>ebayenterprise_paypal.xml</file>
+                </ebayenterprise_paypal>
+            </updates>
+        </layout>
+        <translate>
+            <modules>
+                <EbayEnterprise_PayPal>
+                    <files>
+                        <default>EbayEnterprise_PayPal.csv</default>
+                    </files>
+                </EbayEnterprise_PayPal>
+            </modules>
+        </translate>
+        <events>
+            <controller_action_predispatch_checkout_multishipping_overview>
+                <observers>
+                    <ebayenterprise_paypal_handle_payment_redirect>
+                        <class>ebayenterprise_paypal/observer</class>
+                        <method>handleControllerActionPredispatch</method>
+                    </ebayenterprise_paypal_handle_payment_redirect>
+                </observers>
+            </controller_action_predispatch_checkout_multishipping_overview>
+            <ebayenterprise_multishipping_before_submit_order_create>
+                <observers>
+                    <ebayenterprise_paypal_handle_do_auth>
+                        <class>ebayenterprise_paypal/observer</class>
+                        <method>handleEbayEnterpriseMultishippingBeforeSubmitOrderCreate</method>
+                    </ebayenterprise_paypal_handle_do_auth>
+                </observers>
+            </ebayenterprise_multishipping_before_submit_order_create>
+        </events>
+    </frontend>
+    <default>
+        <payment>
+            <ebayenterprise_paypal_express>
+                <model>ebayenterprise_paypal/method_express</model>
+            </ebayenterprise_paypal_express>
+        </payment>
+        <ebayenterprise_paypal>
+            <general>
+                <title>eBay Enterprise PayPal</title>
+                <order_status>pending</order_status>
+                <payment_action>authorize</payment_action>
+                <logo_type>wePrefer_150x60</logo_type>
+                <payment_mark_size/>
+                <transfer_lines>1</transfer_lines>
+            </general>
+            <api>
+                <service>payments</service>
+                <operation_set_express_checkout>paypal/setExpress</operation_set_express_checkout>
+                <operation_get_express_checkout>paypal/getExpress</operation_get_express_checkout>
+                <operation_do_express_checkout>paypal/doExpress</operation_do_express_checkout>
+                <operation_do_authorization>paypal/doAuth</operation_do_authorization>
+                <operation_do_void>paypal/void</operation_do_void>
+            </api>
+        </ebayenterprise_paypal>
+    </default>
+    <phpunit>
+        <suite>
+            <modules>
+                <EbayEnterprise_PayPal/>
+            </modules>
+        </suite>
+    </phpunit>
+</config>

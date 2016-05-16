@@ -1,0 +1,5 @@
+"EBAYENTERPRISE_PAYPAL_WILL_REDIRECT_MESSAGE","You will be redirected to the PayPal website."
+"EBAYENTERPRISE_PAYPAL_API_FAILED","Unable to perform PayPal transaction. Please try again."
+"EBAYENTERPRISE_PAYPAL_PAYMENT_CANCELED","Express Checkout and Order have been canceled"
+"EBAYENTERPRISE_PAYPAL_ZERO_CHECKOUT_NOT_SUPPORTED","Cannot perform Zero Checkout"
+"EBAYENTERPRISE_PAYPAL_PAYMENT_MARK_ALT_TEXT","Pay with PayPal"
