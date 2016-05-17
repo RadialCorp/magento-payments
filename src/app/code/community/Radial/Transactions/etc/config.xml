@@ -18,6 +18,28 @@ http://opensource.org/licenses/osl-3.0.php
             <version>1.0.0</version>
         </Radial_Transactions>
     </modules>
+    <frontend>
+        <translate>
+            <modules>
+                <Radial_Transactions>
+                    <files>
+                        <default>Radial_Transactions.csv</default>
+                    </files>
+                </Radial_Transactions>
+            </modules>
+        </translate>
+    </frontend>
+    <adminhtml>
+        <translate>
+            <modules>
+                <Radial_Transactions>
+                    <files>
+                        <default>Radial_Transactions.csv</default>
+                    </files>
+                </Radial_Transactions>
+            </modules>
+        </translate>
+    </adminhtml>
     <global>
         <models>
             <radial_transactions>

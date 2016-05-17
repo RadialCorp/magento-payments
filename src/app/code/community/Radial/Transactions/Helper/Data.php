@@ -15,6 +15,8 @@
 
 class Radial_Transactions_Helper_Data extends Mage_Core_Helper_Abstract
 {
+    const AMOUNT_AUTHORIZED = 'RADIAL_TRANSACTION_AMOUNT_AUTHORIZED';
+    
     /**
      * @param Mage_Sales_Model_Order_Payment
      * @param bool
@@ -45,8 +47,7 @@ class Radial_Transactions_Helper_Data extends Mage_Core_Helper_Abstract
     protected function getPaymentAdditionalInfo(Mage_Sales_Model_Order_Payment $payment)
     {
         return [
-            'Authorized'    => $payment->getAmountAuthorized(),
-            'Paid'          => $payment->getAmountPaid()
+            $this->__(static::AMOUNT_AUTHORIZED) => $payment->getAmountAuthorized(),
         ];
     }
 }
