@@ -776,6 +776,8 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         $request
             ->setIsEncrypted($this->_isUsingClientSideEncryption)
             ->setPanIsToken(true)
+            ->setCardNumber($payment->getCcNumber())
+            ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setAmount((float)$amountAuthorized)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setOrderId($order->getIncrementId());
@@ -850,7 +852,6 @@ class EbayEnterprise_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Mode
         if (!$payment->getParentTransactionId()) {
             Mage::throwException($this->_helper->__('Invalid transaction ID.'));
         }
-        $this->_logger->debug($this->_helper->__('Calling method: %s', __METHOD__));
         $api = $this->_getAuthCancelApi($payment);
         $this->_prepareAuthCancelRequest($api, $payment);
         Mage::dispatchEvent('ebayenterprise_creditcard_auth_cancel_request_send_before', [
