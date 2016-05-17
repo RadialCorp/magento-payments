@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2013-2014 eBay Enterprise, Inc.
+
+NOTICE OF LICENSE
+
+This source file is subject to the Open Software License (OSL 3.0)
+that is bundled with this package in the file LICENSE.md.
+It is also available through the world-wide-web at this URL:
+http://opensource.org/licenses/osl-3.0.php
+
+@copyright   Copyright (c) 2013-2014 eBay Enterprise, Inc. (http://www.ebayenterprise.com/)
+@license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+-->
+<config>
+    <modules>
+        <Radial_CreditCard>
+            <version>1.4.0</version>
+        </Radial_CreditCard>
+    </modules>
+    <global>
+        <models>
+            <radial_creditcard>
+                <class>Radial_CreditCard_Model</class>
+            </radial_creditcard>
+        </models>
+        <blocks>
+            <radial_creditcard>
+                <class>Radial_CreditCard_Block</class>
+            </radial_creditcard>
+        </blocks>
+        <helpers>
+            <radial_creditcard>
+                <class>Radial_CreditCard_Helper</class>
+            </radial_creditcard>
+        </helpers>
+        <events>
+            <ebayenterprise_order_create_payment>
+                <observers>
+                    <radial_creditcard_order_create_payment_observer>
+                        <type>model</type>
+                        <class>radial_creditcard/observer</class>
+                        <method>handleOrderCreatePaymentEvent</method>
+                    </radial_creditcard_order_create_payment_observer>
+                </observers>
+            </ebayenterprise_order_create_payment>
+            <radial_amqp_message_payments_settlements_status>
+                <observers>
+                    <radial_creditcard_payments_settlements_status_observer>
+                        <type>model</type>
+                        <class>radial_creditcard/observer</class>
+                        <method>handlePaymentSettlementsStatusEvent</method>
+                    </radial_creditcard_payments_settlements_status_observer>
+                </observers>
+            </radial_amqp_message_payments_settlements_status>
+        </events>
+    </global>
+    <frontend>
+        <layout>
+            <updates>
+                <radial_creditcard>
+                    <file>radial_creditcard.xml</file>
+                </radial_creditcard>
+            </updates>
+        </layout>
+        <translate>
+            <modules>
+                <Radial_CreditCard>
+                    <files>
+                        <default>Radial_CreditCard.csv</default>
+                    </files>
+                </Radial_CreditCard>
+            </modules>
+        </translate>
+    </frontend>
+    <adminhtml>
+        <layout>
+            <updates>
+                <radial_creditcard>
+                    <file>radial_creditcard.xml</file>
+                </radial_creditcard>
+            </updates>
+        </layout>
+        <translate>
+            <modules>
+                <Radial_CreditCard>
+                    <files>
+                        <default>Radial_CreditCard.csv</default>
+                    </files>
+                </Radial_CreditCard>
+            </modules>
+        </translate>
+    </adminhtml>
+    <default>
+        <payment>
+            <radial_creditcard>
+                <model>radial_creditcard/method_ccpayment</model>
+                <title>Credit Card (eBay Enterprise)</title>
+                <order_status>pending</order_status>
+                <cctypes>AE,VI,MC,DI</cctypes>
+                <payment_action>authorize</payment_action>
+                <allowspecific>0</allowspecific>
+                <use_client_side_encryption>1</use_client_side_encryption>
+            </radial_creditcard>
+        </payment>
+        <radial_creditcard>
+            <api>
+                <service>payments</service>
+                <operation_authorize>creditcard/auth</operation_authorize>
+                <operation_confirm>funds/confirm</operation_confirm>
+                <operation_capture>settlement/create</operation_capture>
+                <operation_cancel>auth/cancel</operation_cancel>
+            </api>
+        </radial_creditcard>
+    </default>
+    <phpunit>
+        <suite>
+            <modules>
+                <Radial_CreditCard/>
+            </modules>
+        </suite>
+    </phpunit>
+</config>

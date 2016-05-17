@@ -23,15 +23,15 @@ http://opensource.org/licenses/osl-3.0.php
 
             Suggested Schedule: As often as possible
             -->
-            <ebayenterprise_amqp_runner_process_queues>
+            <radial_amqp_runner_process_queues>
                 <schedule>
                     <cron_expr>*/5 * * * *</cron_expr>
                 </schedule>
-            </ebayenterprise_amqp_runner_process_queues>
+            </radial_amqp_runner_process_queues>
         </jobs>
     </crontab>
     <default>
-        <eb2ccore>
+        <radial_core>
             <!--
             Shipping Codes: Map Magento shipping methods to ROM shipping codes. Node names must match Magento shipping
             methods. Values must match ROM shipping codes specific to your client implementation, which eBay Enterpise
@@ -40,12 +40,12 @@ http://opensource.org/licenses/osl-3.0.php
             <shipmap>
                 <flatrate_flatrate>ANY_STD</flatrate_flatrate>
             </shipmap>
-        </eb2ccore>
+        </radial_core>
         <!--
         Message Queue: Configuration to fetch messages from the ROM message queue. Unless otherwise noted, the provided
         sample values should suffice for most uses.
         -->
-        <ebayenterprise_amqp>
+        <radial_amqp>
             <general>
                 <!--
                 Number of Messages to Process: Specify the number of messages to fetch at one time from a single queue.
@@ -99,8 +99,8 @@ http://opensource.org/licenses/osl-3.0.php
                 <nowait>0</nowait>
                 <binding_nowait>0</binding_nowait>
             </queue>
-        </ebayenterprise_amqp>
-        <ebayenterprise_creditcard>
+        </radial_amqp>
+        <radial_creditcard>
             <!--
             Credit Card Tenders: Map Magento credit card types to ROM credit card tender types. Node names must match
             the credit card code as configured in Mage_Payment's etc/config.xml. Values must match credit card tender
@@ -112,8 +112,8 @@ http://opensource.org/licenses/osl-3.0.php
                 <MC>MC</MC>
                 <VI>VC</VI>
             </tender_types>
-        </ebayenterprise_creditcard>
-        <ebayenterprise_paypal>
+        </radial_creditcard>
+        <radial_paypal>
             <url>
                 <!-- logo image for category pages -->
                 <logo_image_src>https://www.paypalobjects.com/{locale_code}/i/bnr/bnr_{logo_type}.gif</logo_image_src>
@@ -126,6 +126,6 @@ http://opensource.org/licenses/osl-3.0.php
                 <!-- What is PayPal link on express payment method in checkout -->
                 <what_is_page_url>https://www.paypal.com/us/cgi-bin/webscr?cmd=xpt/Marketing/popup/OLCWhatIsPayPal-outside</what_is_page_url>
             </url>
-        </ebayenterprise_paypal>
+        </radial_paypal>
     </default>
 </config>
