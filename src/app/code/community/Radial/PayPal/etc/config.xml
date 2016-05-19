@@ -55,6 +55,17 @@ http://opensource.org/licenses/osl-3.0.php
             </ebayenterprise_order_create_context>
         </events>
     </global>
+    <adminhtml>
+        <translate>
+            <modules>
+                <Radial_PayPal>
+                    <files>
+                        <default>Radial_PayPal.csv</default>
+                    </files>
+                </Radial_PayPal>
+            </modules>
+        </translate>
+    </adminhtml>
     <frontend>
         <routers>
             <radial_paypal_express>
@@ -104,6 +115,7 @@ http://opensource.org/licenses/osl-3.0.php
         <payment>
             <radial_paypal_express>
                 <model>radial_paypal/method_express</model>
+                <use_client_side_encryption>1</use_client_side_encryption>
             </radial_paypal_express>
         </payment>
         <radial_paypal>
@@ -122,6 +134,8 @@ http://opensource.org/licenses/osl-3.0.php
                 <operation_do_express_checkout>paypal/doExpress</operation_do_express_checkout>
                 <operation_do_authorization>paypal/doAuth</operation_do_authorization>
                 <operation_do_void>paypal/void</operation_do_void>
+                <operation_do_settlement>settlement/create</operation_do_settlement>
+                <operation_do_confirm_funds>funds/confirm</operation_do_confirm_funds>
             </api>
         </radial_paypal>
     </default>

@@ -32,25 +32,29 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
     /**
      * Mage Payment Method Availability options
      */
-    protected $_isGateway = false;
+    protected $_isGateway = true;
     protected $_canOrder = true;
     protected $_canAuthorize = true;
-    protected $_canCapture = false;
-    protected $_canCapturePartial = false;
-    protected $_canRefund = false;
-    protected $_canRefundInvoicePartial = false;
+    protected $_canCapture = true;
+    protected $_canCapturePartial = true;
+    protected $_canRefund = true;
+    protected $_canRefundInvoicePartial = true;
     protected $_canVoid = true;
     protected $_canUseInternal = false;
     protected $_canUseCheckout = true;
     protected $_canUseForMultishipping = true;
-    protected $_canFetchTransactionInfo = false;
+    protected $_canFetchTransactionInfo = true;
     protected $_canCreateBillingAgreement = false;
-    protected $_canReviewPayment = false;
+    protected $_canReviewPayment = true;
 
+    /** @var bool */
+    protected $_isUsingClientSideEncryption;
     /** @var Radial_PayPal_Helper_Data */
     protected $_helper;
     /** @var Radial_Core_Model_Config_Registry */
     protected $_config;
+    /** @var Radial_Paypal_Model_Express_Api */
+    protected $_api;
     /** @var string[] */
     protected $_selectorKeys = array(
         Radial_PayPal_Model_Express_Checkout::PAYMENT_INFO_TOKEN,
@@ -74,10 +78,11 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
      *                          -  'core_helper' => Radial_Core_Helper_Data
      *                          -  'config' => Radial_Core_Model_Config_Registry
      *                          -  'logger' => EbayEnterprise_MageLog_Helper_Data
+     *                          -  'api' => Radial_Paypal_Model_Express_Api
      */
     public function __construct(array $initParams = array())
     {
-        list($this->_helper, $this->_coreHelper, $this->_logger, $this->_config)
+        list($this->_helper, $this->_coreHelper, $this->_logger, $this->_config, $this->_api)
             = $this->_checkTypes(
                 $this->_nullCoalesce(
                     $initParams,
@@ -98,6 +103,11 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                     $initParams,
                     'config',
                     Mage::helper('radial_paypal')->getConfigModel()
+                ),
+                $this->_nullCoalesce(
+                    $initParams,
+                    'api',
+                    Mage::getModel('radial_paypal/express_api')
                 )
             );
     }
@@ -105,11 +115,12 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
     /**
      * Type hinting for self::__construct $initParams
      *
-     * @param Radial_PayPal_Helper_Data             $helper
-     * @param Radial_Core_Helper_Data           $coreHelper
-     * @param Mage_Core_Helper_Http                         $httpHelper
-     * @param EbayEnterprise_MageLog_Helper_Data            $logger
-     * @param Radial_Core_Model_Config_Registry $config
+     * @param Radial_PayPal_Helper_Data
+     * @param Radial_Core_Helper_Data
+     * @param Mage_Core_Helper_Http
+     * @param EbayEnterprise_MageLog_Helper_Data
+     * @param Radial_Core_Model_Config_Registry
+     * @param Radial_Paypal_Model_Express_Api
      *
      * @return array
      */
@@ -117,9 +128,10 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         Radial_PayPal_Helper_Data $helper,
         Radial_Core_Helper_Data $coreHelper,
         EbayEnterprise_MageLog_Helper_Data $logger,
-        Radial_Core_Model_Config_Registry $config
+        Radial_Core_Model_Config_Registry $config,
+        Radial_Paypal_Model_Express_Api $api
     ) {
-        return array($helper, $coreHelper, $logger, $config);
+        return array($helper, $coreHelper, $logger, $config, $api);
     }
 
     /**
@@ -135,6 +147,70 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
     protected function _nullCoalesce(array $arr, $field, $default)
     {
         return isset($arr[$field]) ? $arr[$field] : $default;
+    }
+
+    /**
+     * Confirm funds method
+     *
+     * @param Varien_Object $payment
+     * @param float $amount
+     *
+     * @return Mage_Payment_Model_Abstract
+     */
+    public function confirm(Varien_Object $payment, $amount)
+    {
+        $this->_api->doConfirm($payment, $amount);
+        return $this;
+    }
+
+    /**
+     * Capture payment abstract method
+     *
+     * @param Varien_Object $payment
+     * @param float $amount
+     *
+     * @return Mage_Payment_Model_Abstract
+     */
+    public function capture(Varien_Object $payment, $amount)
+    {
+        if (!$this->canCapture()) {
+            Mage::throwException(Mage::helper('payment')->__('Capture action is not available.'));
+        }
+        $this->_api->doCapture($payment, $amount);
+        return $this;
+    }
+
+    /**
+     * Refund specified amount for payment
+     *
+     * @param Varien_Object $payment
+     * @param float $amount
+     *
+     * @return Mage_Payment_Model_Abstract
+     */
+    public function refund(Varien_Object $payment, $amount)
+    {
+        if (!$this->canRefund()) {
+            Mage::throwException(Mage::helper('payment')->__('Refund action is not available.'));
+        }
+        $this->_api->doRefund($payment, $amount);
+        return $this;
+    }
+
+    /**
+     * Void payment abstract method
+     *
+     * @param Varien_Object $payment
+     *
+     * @return Mage_Payment_Model_Abstract
+     */
+    public function void(Varien_Object $payment)
+    {
+        if (!$this->canVoid($payment)) {
+            Mage::throwException(Mage::helper('payment')->__('Void action is not available.'));
+        }
+        $this->_api->doVoidOrder($payment->getOrder());
+        return $this;
     }
 
     /**

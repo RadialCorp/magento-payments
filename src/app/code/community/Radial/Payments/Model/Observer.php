@@ -30,7 +30,7 @@ class Radial_Payments_Model_Observer
         $order = $payment->getOrder();
         $payment->setInvoiceForCapture($invoice);
         $methodInstance = $payment->getMethodInstance();
-        if (is_callable([$methodInstance, 'confirm'])) {
+        if (method_exists($methodInstance, 'confirm')) {
             $methodInstance->setStore($order->getStoreId())
                 ->confirm($payment, $invoice->getBaseGrandTotal());
         }

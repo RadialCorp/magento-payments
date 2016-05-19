@@ -16,8 +16,8 @@ http://opensource.org/licenses/osl-3.0.php
     <sections>
         <payment>
             <groups>
-                <radial_paypal_express translate="label comment" module="radial_paypal">
-                    <label>eBay Enterprise PayPal</label>
+                <radial_paypal_express translate="label comment">
+                    <label>Radial PayPal</label>
                     <sort_order>5</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>

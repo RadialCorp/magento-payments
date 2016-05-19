@@ -38,8 +38,11 @@ class Radial_PayPal_Model_Config extends Radial_Core_Model_Config_Abstract
             'api_operation_get_express_checkout' => 'radial_paypal/api/operation_get_express_checkout',
             'api_operation_do_express_checkout'  => 'radial_paypal/api/operation_do_express_checkout',
             'api_operation_do_authorization'     => 'radial_paypal/api/operation_do_authorization',
+            'api_operation_do_settlement'        => 'radial_paypal/api/operation_do_settlement',
+            'api_operation_do_confirm_funds'     => 'radial_paypal/api/operation_do_confirm_funds',
             'api_operation_do_void'              => 'radial_paypal/api/operation_do_void',
             'api_service'                        => 'radial_paypal/api/service',
+            'use_client_side_encryption'         => 'payment/radial_paypal/use_client_side_encryption',
             // URL and Image configuration
             'logo_image_src'                     => 'radial_paypal/url/logo_image_src',
             'logo_about_page_uri'                => 'radial_paypal/url/logo_about_page_uri',

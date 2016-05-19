@@ -19,7 +19,10 @@ use eBayEnterprise\RetailOrderManagement\Payload\Exception\InvalidPayload;
 use eBayEnterprise\RetailOrderManagement\Payload\Payment\IShippingAddress;
 use eBayEnterprise\RetailOrderManagement\Payload\Payment\ILineItemIterable;
 use eBayEnterprise\RetailOrderManagement\Payload\Payment\ILineItemContainer;
-
+use eBayEnterprise\RetailOrderManagement\Api;
+use eBayEnterprise\RetailOrderManagement\Api\Exception\UnsupportedHttpAction;
+use eBayEnterprise\RetailOrderManagement\Api\Exception\UnsupportedOperation;
+use eBayEnterprise\RetailOrderManagement\Payload;
 /**
  * Payment Method for PayPal payments through Retail Order Management.
  * @SuppressWarnings(TooManyMethods)
@@ -33,6 +36,10 @@ class Radial_Paypal_Model_Express_Api
     const PAYPAL_DOEXPRESS_REQUEST_ID_PREFIX = 'PSD-';
     const PAYPAL_DOAUTHORIZATION_REQUEST_ID_PREFIX = 'PSA-';
     const PAYPAL_DOVOID_REQUEST_ID_PREFIX = 'PSV-';
+    const SETTLEMENT_TYPE_CAPTURE = 'Debit';
+    const SETTLEMENT_TYPE_REFUND = 'Credit';
+    const PAYMENT_CONFIRM_FUNDS_FAILED = 'RADIAL_PAYPAL_PAYMENT_CONFIRM_FUNDS_FAILED';
+    const TENDER_TYPE_PAYPAL = 'PY';
 
     /** @var Radial_PayPal_Helper_Item_Selection */
     protected $selectionHelper;
@@ -74,6 +81,7 @@ class Radial_Paypal_Model_Express_Api
             $this->nullCoalesce($initParams, 'log_context', Mage::helper('ebayenterprise_magelog/context'))
         );
         $this->config = $this->helper->getConfigModel();
+        $this->_isUsingClientSideEncryption = $this->config->useClientSideEncryptionFlag;
     }
 
     /**
@@ -107,6 +115,252 @@ class Radial_Paypal_Model_Express_Api
     protected function nullCoalesce(array $arr, $field, $default)
     {
         return isset($arr[$field]) ? $arr[$field] : $default;
+    }
+    
+    public function doCapture(Varien_Object $payment, $amount)
+    {
+        if ($amount <= 0) {
+            Mage::throwException($this->helper->__('Invalid amount for capture.'));
+        }
+        $sdk = $this->getSdk(
+            $this->config->apiOperationDoSettlement,
+            [static::TENDER_TYPE_PAYPAL]
+        );
+        $this->_prepareCaptureRequest($sdk, $payment);
+        Mage::dispatchEvent('radial_paypal_capture_request_send_before', [
+            'payload' => $sdk->getRequestBody(),
+            'payment' => $payment,
+        ]);
+        // Log the request instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Sending paypal capture request.';
+        $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['request_body' => $sdk->getRequestBody()->serialize()]));
+        $this->sendRequest($sdk);
+        // Log the response instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Received paypal capture response.';
+        $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['response_body' => $sdk->getResponseBody()->serialize()]));
+        $this->_handleCaptureResponse($sdk, $payment);
+        return $this;
+    }
+    
+    public function doRefund(Varien_Object $payment, $amount)
+    {
+        if ($amount <= 0) {
+            Mage::throwException($this->helper->__('Invalid amount for refund.'));
+        }
+        if (!$payment->getParentTransactionId()) {
+            Mage::throwException($this->helper->__('Invalid transaction ID.'));
+        }
+        $sdk = $this->getSdk(
+            $this->config->apiOperationDoSettlement,
+            [static::TENDER_TYPE_PAYPAL]
+        );
+        $this->_prepareRefundRequest($sdk, $payment);
+        Mage::dispatchEvent('radial_paypal_refund_request_send_before', [
+            'payload' => $sdk->getRequestBody(),
+            'payment' => $payment,
+        ]);
+        // Log the request instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Sending credit card refund request.';
+        $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['request_body' => $sdk->getRequestBody()->serialize()]));
+        $this->sendRequest($sdk);
+        // Log the response instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Received credit card refund response.';
+        $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['response_body' => $sdk->getResponseBody()->serialize()]));
+        $this->_handleRefundResponse($sdk, $payment);
+        return $this;
+    }
+    /**
+     * Send confirm funds request
+     *
+     * @param Mage_Sales_Model_Order_Payment $payment
+     * @param float $amount
+     * @return self
+     * @throws Mage_Core_Exception
+     */
+    public function doConfirm(Varien_Object $payment, $amount)
+    {
+        if ($amount <= 0) {
+            Mage::throwException($this->helper->__('Invalid amount to confirm funds.'));
+        }
+        $sdk = $this->getSdk(
+            $this->config->apiOperationDoConfirmFunds,
+            [static::TENDER_TYPE_PAYPAL]
+        );
+        $this->_prepareConfirmFundsRequest($sdk, $payment, $amount);
+        Mage::dispatchEvent('radial_creditcard_confirm_funds_send_before', [
+            'payload' => $sdk->getRequestBody(),
+            'payment' => $payment,
+        ]);
+        // Log the request instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Sending credit card confirm funds request.';
+        $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['request_body' => $sdk->getRequestBody()->serialize()]));
+        $this->sendRequest($sdk);
+        // Log the response instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Received credit card confirm funds response.';
+        $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['response_body' => $sdk->getResponseBody()->serialize()]));
+        $this->_handleConfirmFundsResponse($sdk, $payment);
+        return $this;
+    }
+
+    /**
+     * @param Api\IBidirectionalApi $sdk
+     * @param Varien_Object        $payment
+     * @return self
+     */
+    protected function _handleCaptureResponse(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    {
+        return $this;
+    }
+    /**
+     * @param Api\IBidirectionalApi $sdk
+     * @param Varien_Object        $payment
+     * @return self
+     */
+    protected function _handleRefundResponse(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    {
+        return $this;
+    }
+    /**
+     * Update payment objects with details of the confirm request and response. Validate
+     * that a successful response was received.
+     * @param Api\IBidirectionalApi $sdk
+     * @param Varien_Object        $payment
+     * @return self
+     */
+    protected function _handleConfirmFundsResponse(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    {
+        /** @var Payload\Payment\ConfirmFundsReply $response */
+        $response = $sdk->getResponseBody();
+        return $this->_validateConfirmFundsResponse($response);
+    }
+    /**
+     * Fill out the request payload with payment data and update the API request
+     * body with the complete request.
+     * @param Api\IBidirectionalApi $sdk
+     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param string $type
+     * @return static
+     */
+    protected function _prepareCaptureRequest(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    {
+        /** @var Payload\Payment\PaymentSettlementRequest $request */
+        $request = $sdk->getRequestBody();
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        /** @var Mage_Sales_Model_Order_Invoice $invoice */
+        // Invoice has been assigned to payment.
+        // @see Radial_Payments_Model_Observer::handleInvoiceCaptureEvent
+        $invoice = $payment->getInvoiceForCapture();
+        $amountToCapture = $invoice->getGrandTotal();
+        $request
+            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setPanIsToken(true)
+            ->setAmount((float)$amountToCapture)
+            ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
+            ->setTaxAmount((float)$invoice->getTaxAmount())
+            ->setClientContext($payment->getTransactionId())
+            ->setCardNumber($payment->getCcNumber())
+            ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
+            ->setSettlementType(self::SETTLEMENT_TYPE_CAPTURE)
+            ->setFinalDebit($this->helper->isFinalDebit($payment, $amountToCapture) ? 1 : 0)
+            ->setOrderId($order->getIncrementId());
+        return $this;
+    }
+    /**
+     * Fill out the request payload with payment data and update the API request
+     * body with the complete request.
+     * @param Api\IBidirectionalApi $sdk
+     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param string $type
+     * @return static
+     */
+    protected function _prepareRefundRequest(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    {
+        /** @var Payload\Payment\PaymentSettlementRequest $request */
+        $request = $sdk->getRequestBody();
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        // @see Mage_Sales_Model_Order_Payment::refund
+        $creditmemo = $payment->getCreditmemo();
+        /** @var Mage_Sales_Model_Order_Invoice $invoice */
+        $invoice = $creditmemo->getInvoice();
+        $amountToCapture = $invoice->getGrandTotal();
+        $request
+            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setPanIsToken(true)
+            ->setAmount((float)$amountToCapture)
+            ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
+            ->setTaxAmount((float)$invoice->getTaxAmount())
+            ->setClientContext($payment->getParentTransactionId())
+            ->setCardNumber($payment->getCcNumber())
+            ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
+            ->setSettlementType(self::SETTLEMENT_TYPE_REFUND)
+            ->setFinalDebit(0)
+            ->setOrderId($order->getIncrementId());
+        return $this;
+    }
+    /**
+     * Fill out the request payload with payment data and update the API request
+     * body with the complete request.
+     * @param Api\IBidirectionalApi $sdk
+     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param $amount
+     * @return static
+     */
+    protected function _prepareConfirmFundsRequest(Api\IBidirectionalApi $sdk, Varien_Object $payment, $amount)
+    {
+        /** @var Payload\Payment\ConfirmFundsRequest $request */
+        $request = $sdk->getRequestBody();
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        $request
+            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setPanIsToken(true)
+            ->setAmount((float)$amount)
+            ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
+            ->setCardNumber($payment->getCcNumber())
+            ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
+            ->setOrderId($order->getIncrementId());
+        return $this;
+    }
+    /**
+     * Check for the response to be valid.
+     * @param Payload\Payment\IConfirmFundsReply $response
+     * @return self
+     */
+    protected function _validateConfirmFundsResponse(Payload\Payment\IConfirmFundsReply $response)
+    {
+        // if auth was a complete success, accept the response and move on
+        if ($response->isSuccess()) {
+            return $this;
+        }
+        // auth failed for some other reason, possibly declined, making it unacceptable
+        // send user to payment step of checkout with an error message
+        $this->_failPaymentRequest(self::PAYMENT_CONFIRM_FUNDS_FAILED);
+        return $this;
+    }
+    /**
+     * Fail the auth request by setting a checkout step to return to and throwing
+     * an exception.
+     * @see self::_setCheckoutStep for available checkout steps to return to
+     * @param string $errorMessage
+     * @throws Radial_CreditCard_Exception Always
+     */
+    protected function _failPaymentRequest($errorMessage)
+    {
+        throw Mage::exception('Radial_CreditCard', $this->helper->__($errorMessage));
     }
 
     /**
@@ -272,6 +526,9 @@ class Radial_Paypal_Model_Express_Api
             $this->logger->logException($e, $this->logContext->getMetaData(__CLASS__, [], $e));
             throw $e;
         }
+        // save the token for gateway operations
+        $payment = $quote->getPayment();
+        $payment->setCcNumberEnc($payment->encrypt($reply->getTransactionId()));
         return [
             'method'          => Radial_PayPal_Model_Method_Express::CODE,
             'order_id'        => $reply->getOrderId(),
@@ -472,9 +729,9 @@ class Radial_Paypal_Model_Express_Api
      * @param  Varien_Object
      * @return IBidirectionalApi
      */
-    protected function getSdk($operation)
+    protected function getSdk($operation, array $endpointParams = [])
     {
-        return $this->coreHelper->getSdkApi($this->config->apiService, $operation);
+        return $this->coreHelper->getSdkApi($this->config->apiService, $operation, $endpointParams);
     }
 
     /**

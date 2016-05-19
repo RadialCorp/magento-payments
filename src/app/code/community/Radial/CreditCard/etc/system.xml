@@ -17,7 +17,7 @@ http://opensource.org/licenses/osl-3.0.php
         <payment>
             <groups>
                 <radial_creditcard translate="label comment" module="radial_creditcard">
-                    <label>eBay Enterprise Credit Card</label>
+                    <label>Radial Credit Card</label>
                     <sort_order>3</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
