@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2013-2014 eBay Enterprise, Inc.
+
+NOTICE OF LICENSE
+
+This source file is subject to the Open Software License (OSL 3.0)
+that is bundled with this package in the file LICENSE.md.
+It is also available through the world-wide-web at this URL:
+http://opensource.org/licenses/osl-3.0.php
+
+@copyright   Copyright (c) 2013-2014 eBay Enterprise, Inc. (http://www.ebayenterprise.com/)
+@license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+-->
+<config>
+    <modules>
+        <Radial_Payments>
+            <version>1.4.0</version>
+        </Radial_Payments>
+    </modules>
+    <global>
+        <models>
+            <radial_payments>
+                <class>Radial_Payments_Model</class>
+            </radial_payments>
+        </models>
+        <events>
+            <sales_order_payment_capture>
+                <observers>
+                    <radial_payments_capture_observer>
+                        <type>model</type>
+                        <class>radial_payments/observer</class>
+                        <method>handleInvoiceCaptureEvent</method>
+                    </radial_payments_capture_observer>
+                </observers>
+            </sales_order_payment_capture>
+        </events>
+    </global>
+</config>

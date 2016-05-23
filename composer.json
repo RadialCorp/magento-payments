@@ -1,6 +1,6 @@
 {
-  "name": "radial/magento-payments-creditcard",
-  "description": "Radial Credit Card Payments Module",
+  "name": "radial/magento-payments",
+  "description": "Radial Payments Extension",
   "license": "OSL-3.0",
   "authors": [
     { "name": "Aaron Anderson", "email": "andersona@radial.com", "role": "Developer" },
@@ -12,8 +12,7 @@
   "type": "magento-module",
   "require": {
     "php": ">=5.4.0",
-    "radial/magento-core": "^1.0",
-    "radial/magento-payments-transactions": "^1.0"
+    "radial/magento-core": "~2.0.0"
   },
   "require-dev": {
     "ecomdev/ecomdev_phpunit": ">=0.3",

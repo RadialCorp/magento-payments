@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2013-2014 eBay Enterprise, Inc.
+
+NOTICE OF LICENSE
+
+This source file is subject to the Open Software License (OSL 3.0)
+that is bundled with this package in the file LICENSE.md.
+It is also available through the world-wide-web at this URL:
+http://opensource.org/licenses/osl-3.0.php
+
+@copyright   Copyright (c) 2013-2014 eBay Enterprise, Inc. (http://www.ebayenterprise.com/)
+@license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+-->
+<config>
+    <modules>
+        <Radial_Transactions>
+            <version>1.0.0</version>
+        </Radial_Transactions>
+    </modules>
+    <frontend>
+        <translate>
+            <modules>
+                <Radial_Transactions>
+                    <files>
+                        <default>Radial_Transactions.csv</default>
+                    </files>
+                </Radial_Transactions>
+            </modules>
+        </translate>
+    </frontend>
+    <adminhtml>
+        <translate>
+            <modules>
+                <Radial_Transactions>
+                    <files>
+                        <default>Radial_Transactions.csv</default>
+                    </files>
+                </Radial_Transactions>
+            </modules>
+        </translate>
+    </adminhtml>
+    <global>
+        <models>
+            <radial_transactions>
+                <class>Radial_Transactions_Model</class>
+            </radial_transactions>
+        </models>
+        <helpers>
+            <radial_transactions>
+                <class>Radial_Transactions_Helper</class>
+            </radial_transactions>
+        </helpers>
+        <events>
+            <sales_order_payment_place_end>
+                <observers>
+                    <radial_transactions_order_create_payment_observer>
+                        <type>model</type>
+                        <class>radial_transactions/observer</class>
+                        <method>handleOrderCreatePaymentEvent</method>
+                    </radial_transactions_order_create_payment_observer>
+                </observers>
+            </sales_order_payment_place_end>
+            <sales_order_payment_capture>
+                <observers>
+                    <radial_transactions_order_payment_capture_observer>
+                        <type>model</type>
+                        <class>radial_transactions/observer</class>
+                        <method>handleCapturePaymentEvent</method>
+                    </radial_transactions_order_payment_capture_observer>
+                </observers>
+            </sales_order_payment_capture>
+        </events>
+    </global>
+</config>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2013-2014 eBay Enterprise, Inc.
+
+NOTICE OF LICENSE
+
+This source file is subject to the Open Software License (OSL 3.0)
+that is bundled with this package in the file LICENSE.md.
+It is also available through the world-wide-web at this URL:
+http://opensource.org/licenses/osl-3.0.php
+
+@copyright   Copyright (c) 2013-2014 eBay Enterprise, Inc. (http://www.ebayenterprise.com/)
+@license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+-->
+<config>
+    <modules>
+        <Radial_PayPal>
+            <version>1.4.0</version>
+        </Radial_PayPal>
+    </modules>
+    <global>
+        <models>
+            <radial_paypal>
+                <class>Radial_PayPal_Model</class>
+            </radial_paypal>
+        </models>
+        <blocks>
+            <radial_paypal>
+                <class>Radial_PayPal_Block</class>
+            </radial_paypal>
+        </blocks>
+        <helpers>
+            <radial_paypal>
+                <class>Radial_PayPal_Helper</class>
+            </radial_paypal>
+        </helpers>
+        <events>
+            <ebayenterprise_order_create_payment>
+                <observers>
+                    <radial_paypal_order_create_payment_observer>
+                        <type>model</type>
+                        <class>radial_paypal/observer</class>
+                        <method>handleOrderCreatePaymentEvent</method>
+                    </radial_paypal_order_create_payment_observer>
+                </observers>
+            </ebayenterprise_order_create_payment>
+            <ebayenterprise_order_create_context>
+                <observers>
+                    <radial_paypal_order_create_context_observer>
+                        <type>model</type>
+                        <class>radial_paypal/observer</class>
+                        <method>handleOrderCreateContextEvent</method>
+                    </radial_paypal_order_create_context_observer>
+                </observers>
+            </ebayenterprise_order_create_context>
+        </events>
+    </global>
+    <frontend>
+        <routers>
+            <radial_paypal_express>
+                <use>standard</use>
+                <args>
+                    <module>Radial_PayPal</module>
+                    <frontName>paypal-express</frontName>
+                </args>
+            </radial_paypal_express>
+        </routers>
+        <layout>
+            <updates>
+                <radial_paypal module="Radial_PayPal">
+                    <file>radial_paypal.xml</file>
+                </radial_paypal>
+            </updates>
+        </layout>
+        <translate>
+            <modules>
+                <Radial_PayPal>
+                    <files>
+                        <default>Radial_PayPal.csv</default>
+                    </files>
+                </Radial_PayPal>
+            </modules>
+        </translate>
+        <events>
+            <controller_action_predispatch_checkout_multishipping_overview>
+                <observers>
+                    <radial_paypal_handle_payment_redirect>
+                        <class>radial_paypal/observer</class>
+                        <method>handleControllerActionPredispatch</method>
+                    </radial_paypal_handle_payment_redirect>
+                </observers>
+            </controller_action_predispatch_checkout_multishipping_overview>
+            <ebayenterprise_multishipping_before_submit_order_create>
+                <observers>
+                    <radial_paypal_handle_do_auth>
+                        <class>radial_paypal/observer</class>
+                        <method>handleEbayEnterpriseMultishippingBeforeSubmitOrderCreate</method>
+                    </radial_paypal_handle_do_auth>
+                </observers>
+            </ebayenterprise_multishipping_before_submit_order_create>
+        </events>
+    </frontend>
+    <default>
+        <payment>
+            <radial_paypal_express>
+                <model>radial_paypal/method_express</model>
+            </radial_paypal_express>
+        </payment>
+        <radial_paypal>
+            <general>
+                <title>eBay Enterprise PayPal</title>
+                <order_status>pending</order_status>
+                <payment_action>authorize</payment_action>
+                <logo_type>wePrefer_150x60</logo_type>
+                <payment_mark_size/>
+                <transfer_lines>1</transfer_lines>
+            </general>
+            <api>
+                <service>payments</service>
+                <operation_set_express_checkout>paypal/setExpress</operation_set_express_checkout>
+                <operation_get_express_checkout>paypal/getExpress</operation_get_express_checkout>
+                <operation_do_express_checkout>paypal/doExpress</operation_do_express_checkout>
+                <operation_do_authorization>paypal/doAuth</operation_do_authorization>
+                <operation_do_void>paypal/void</operation_do_void>
+            </api>
+        </radial_paypal>
+    </default>
+    <phpunit>
+        <suite>
+            <modules>
+                <Radial_PayPal/>
+            </modules>
+        </suite>
+    </phpunit>
+</config>

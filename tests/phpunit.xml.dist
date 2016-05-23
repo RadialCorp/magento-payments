@@ -32,15 +32,17 @@ http://opensource.org/licenses/osl-3.0.php
     </testsuite>
     <groups>
         <include>
-            <group>EbayEnterprise_CreditCard</group>
+            <group>Radial_CreditCard</group>
+            <group>Radial_PayPal</group>
         </include>
     </groups>
     <filter>
         <whitelist>
             <!-- Report coverage only for this extension. -->
-            <directory suffix=".php">app/code/community/EbayEnterprise/CreditCard</directory>
+            <directory suffix=".php">app/code/community/Radial/CreditCard</directory>
+            <directory suffix=".php">app/code/community/Radial/PayPal</directory>
             <exclude>
-                <directory suffix=".php">app/code/community/EbayEnterprise/*/Test</directory>
+                <directory suffix=".php">app/code/community/Radial/*/Test</directory>
             </exclude>
         </whitelist>
     </filter>

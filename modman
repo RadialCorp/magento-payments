@@ -1,5 +1,5 @@
 # Core
-src/app/code/community/EbayEnterprise/* app/code/community/EbayEnterprise/
+src/app/code/community/Radial/* app/code/community/Radial/
 src/app/etc/*.xml.sample app/etc/
 src/app/etc/modules/*.xml app/etc/modules/
 
@@ -15,4 +15,5 @@ src/app/design/adminhtml/default/default/template/* app/design/adminhtml/default
 src/js/* js/
 
 # Locale
-src/app/locale/en_US/EbayEnterprise_CreditCard.csv app/locale/en_US/EbayEnterprise_CreditCard.csv
+src/app/locale/en_US/Radial_CreditCard.csv app/locale/en_US/Radial_CreditCard.csv
+src/app/locale/en_US/Radial_CreditCard.csv app/locale/en_US/Radial_PayPal.csv
