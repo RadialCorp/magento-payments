@@ -366,7 +366,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         // if auth was a complete success, accept the response and move on
         if ($response->getIsAuthSuccessful()) {
-	    Mage::getSingleton('core/session')->setFailedCCAttempts(0);
             return $this;
         }
         // if AVS correction is needed, redirect to billing address step
@@ -381,7 +380,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         // request is at least acceptable - timeout perhaps - and if so, take it
         // and allow order submit to continue
         if ($response->getIsAuthAcceptable()) {
-	    Mage::getSingleton('core/session')->setFailedCCAttempts(0);
             return $this;
         }
         // auth failed for some other reason, possibly declined, making it unacceptable
@@ -473,16 +471,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     protected function _failPaymentRequest($errorMessage, $returnStep = 'payment')
     {
-	$prev = Mage::getSingleton('core/session')->getFailedCCAttempts();
-
-        if(!$prev)
-        {
-                Mage::getSingleton('core/session')->setFailedCCAttempts(1);
-        } else {
-                $prev++;
-                Mage::getSingleton('core/session')->setFailedCCAttempts($prev);
-        }
-
         $this->_setCheckoutStep($returnStep);
         throw Mage::exception('Radial_CreditCard', $this->_helper->__($errorMessage));
     }
