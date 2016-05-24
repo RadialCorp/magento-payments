@@ -720,39 +720,38 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         );
     }
     /**
-     * Send settlement request
-     *
+     * Invoice has been created.
      * @param Mage_Sales_Model_Order_Payment $payment
      * @param float $amount
      * @return self
      * @throws Mage_Core_Exception
      */
-    public function settlement(Mage_Sales_Model_Order_Invoice $invoice, $amount)
+    public function processInvoice(Mage_Sales_Model_Order_Invoice $invoice, $amount)
     {
         if ($amount <= 0) {
             $this->_logger->error($this->_helper->__('Invalid amount for settlement.'));
             return $this;
         }
         $api = $this->_getSettlementApi($invoice);
-        $this->_prepareSettlementRequest($api, $invoice);
-        Mage::dispatchEvent('radial_creditcard_settlement_request_send_before', [
+        $this->_prepareDebitRequest($api, $invoice);
+        Mage::dispatchEvent('radial_creditcard_settlement_debit_request_send_before', [
             'payload' => $api->getRequestBody(),
             'invoice' => $invoice,
         ]);
         // Log the request instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Sending credit card settlement request.';
+        $logMessage = 'Sending credit card settlement debit request.';
         $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
         $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
         $this->_sendRequest($api);
         // Log the response instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Received credit card settlement response.';
+        $logMessage = 'Received credit card settlement debit response.';
         $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
         $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
-        $this->_handleSettlementResponse($api, $invoice);
+        $this->_handleDebitResponse($api, $invoice);
         return $this;
     }
     /**
@@ -763,7 +762,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * @param string $type
      * @return static
      */
-    protected function _prepareSettlementRequest(Api\IBidirectionalApi $api, Mage_Sales_Model_Order_Invoice $invoice)
+    protected function _prepareDebitRequest(Api\IBidirectionalApi $api, Mage_Sales_Model_Order_Invoice $invoice)
     {
         /** @var Payload\Payment\PaymentSettlementRequest $request */
         $request = $api->getRequestBody();
@@ -815,7 +814,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * @param Varien_Object        $payment
      * @return self
      */
-    protected function _handleSettlementResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    protected function _handleDebitResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
         return $this;
     }
@@ -833,7 +832,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * @param Varien_Object        $payment
      * @return self
      */
-    protected function _handleRefundResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    protected function _handleCreditResponse(Api\IBidirectionalApi $api, Varien_Object $creditmemo, Varien_Object $payment)
     {
         return $this;
     }
@@ -851,17 +850,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             }
         }
         return true;
-    }
-    /**
-     * Round up and cast specified amount to float or string
-     *
-     * @param string|float $amount
-     * @param bool $asFloat
-     * @return string|float
-     */
-    protected function _formatAmount($amount)
-    {
-        return Mage::app()->getStore()->roundPrice($amount);
     }
     /**
      * Void the payment
@@ -899,7 +887,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     }
     /**
      * Refund the amount
-     * Need to decode Last 4 digits for request.
      *
      * @param Varien_Object $payment
      * @param float $amount
@@ -913,57 +900,67 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         if (!$payment->getParentTransactionId()) {
             Mage::throwException($this->_helper->__('Invalid transaction ID.'));
         }
-        // @see Mage_Sales_Model_Order_Payment::refund
-        $creditmemo = $payment->getCreditmemo();
-        /** @var Mage_Sales_Model_Order_Invoice $invoice */
+        // no need to confirm valid auth before refunding
+        // but wait until processCreditmemo is called
+        return $this;
+    }
+    /**
+     * Create a settlement to credit the given amount
+     *
+     * @param Mage_Sales_Model_Order_Creditmemo
+     * @param Mage_Sales_Model_Order_Payment
+     * @param float $amount
+     * @return self
+     */
+    public function processCreditmemo($creditmemo, $payment)
+    {
+        parent::processCreditmemo($creditmemo, $payment);
         $invoice = $creditmemo->getInvoice();
         $api = $this->_getSettlementApi($invoice);
-        $this->_prepareRefundRequest($api, $payment);
-        Mage::dispatchEvent('radial_creditcard_refund_request_send_before', [
+        $this->_prepareCreditRequest($api, $payment, $creditmemo);
+        Mage::dispatchEvent('radial_creditcard_settlement_credit_request_send_before', [
             'payload' => $api->getRequestBody(),
+            'creditmemo' => $creditmemo,
             'payment' => $payment,
         ]);
         // Log the request instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Sending credit card refund request.';
+        $logMessage = 'Sending credit card settlement credit request.';
         $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
         $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
         $this->_sendRequest($api);
         // Log the response instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Received credit card refund response.';
+        $logMessage = 'Received credit card settlement credit response.';
         $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
         $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
-        $this->_handleRefundResponse($api, $payment);
+        $this->_handleCreditResponse($api, $creditmemo, $payment);
         return $this;
     }
     /**
      * Fill out the request payload with payment data and update the API request
      * body with the complete request.
      * @param Api\IBidirectionalApi $api
-     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param Mage_Sales_Model_Order_Creditmemo
+     * @param Mage_Sales_Model_Order_Payment
      * @param string $type
      * @return static
      */
-    protected function _prepareRefundRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
+    protected function _prepareCreditRequest(Api\IBidirectionalApi $api, $creditmemo, $payment)
     {
         /** @var Payload\Payment\PaymentSettlementRequest $request */
         $request = $api->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
-        // @see Mage_Sales_Model_Order_Payment::refund
-        $creditmemo = $payment->getCreditmemo();
-        /** @var Mage_Sales_Model_Order_Invoice $invoice */
         $invoice = $creditmemo->getInvoice();
-        $amountToCapture = $invoice->getGrandTotal();
         $request
             ->setIsEncrypted($this->_isUsingClientSideEncryption)
             ->setPanIsToken(true)
-            ->setAmount((float)$amountToCapture)
+            ->setAmount((float)$creditmemo->getBaseGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
-            ->setTaxAmount((float)$invoice->getTaxAmount())
+            ->setTaxAmount((float)$creditmemo->getTaxAmount())
             ->setClientContext($payment->getParentTransactionId())
             ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))

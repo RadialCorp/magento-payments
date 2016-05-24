@@ -64,7 +64,12 @@ class Radial_Payments_Model_Observer
         return isset($arr[$field]) ? $arr[$field] : $default;
     }
     /**
-     * Remove the capture button to avoid capturing payment after
+     * Remove the capture button from un-captured invoices.
+     * This overrides 'No Capture' invoices which allow the
+     * admin to 'capture' an invoice after being created.
+     * The desired order flow is to capture payment 'online'
+     * when the invoice is created to confirm that funds are
+     * available before making a settlement request.
      * @param Varien_Event_Observer $observer
      */
     public function handleInvoiceViewEvent(Varien_Event_Observer $observer)
@@ -78,39 +83,36 @@ class Radial_Payments_Model_Observer
     }
 
     /**
-     * The invoice is required for settlement requests
-     * but only the payment is given. This is a work-
-     * around for capturing the correct invoice.
      * @param  Varien_Event_Observer $observer
      * @return self
      */
-    public function handleInvoiceSettlementEvent(Varien_Event_Observer $observer)
+    public function handleInvoiceRegisterEvent(Varien_Event_Observer $observer)
     {
         $event = $observer->getEvent();
         $invoice = $event->getInvoice();
-        if ($this->canMakeSettlement($invoice)) {
-            $this->makeSettlement($invoice);
-        } 
+        if ($this->canProcessInvoice($invoice)) {
+            $this->processInvoice($invoice);
+        }
     }
 
     /**
-     * Only Radial payment methods will have the settlement public method.
+     * Do settlement debit for Radial payment methods
      * @param Mage_Sales_Model_Order_Invoice
      */
-    protected function makeSettlement(Mage_Sales_Model_Order_Invoice $invoice)
+    protected function processInvoice(Mage_Sales_Model_Order_Invoice $invoice)
     {
         // The invoice must be saved before continuing.
         $invoice->save();
         $order = $invoice->getOrder();
         $payment = $order->getPayment();
         $methodInstance = $payment->getMethodInstance();
-        if (method_exists($methodInstance, 'settlement')) {
+        if (method_exists($methodInstance, 'processInvoice')) {
             try {
                 $methodInstance->setStore($order->getStoreId())
-                    ->settlement($invoice, $invoice->getBaseGrandTotal());
+                    ->processInvoice($invoice, $invoice->getBaseGrandTotal());
             } catch (Exception $e) {
                 // settlement must be allowed to fail
-                // set invoice status to retry and notify admin
+                // set invoice status as OPEN to trigger a  retry and notify admin
                 $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_OPEN);
                 $errorMessage = $this->helper->__(self::SETTLEMENT_FAILED);
                 $this->getSession()->addNotice($errorMessage);
@@ -120,11 +122,13 @@ class Radial_Payments_Model_Observer
     }
 
     /**
-     * 
+     * Settlement debit can be made when payment method is
+     * allowed to capture, invoice is marked as PAID to confirm
+     * funds, and the capture type is CAPTURE_ONLINE.
      * @param Mage_Sales_Model_Order_Invoice
      * @return bool
      */
-    protected function canMakeSettlement(Mage_Sales_Model_Order_Invoice $invoice)
+    protected function canProcessInvoice(Mage_Sales_Model_Order_Invoice $invoice)
     {
         return $invoice->getOrder()->getPayment()->canCapture() &&
         $invoice->getState() == Mage_Sales_Model_Order_Invoice::STATE_PAID &&
@@ -133,7 +137,6 @@ class Radial_Payments_Model_Observer
 
     /**
      * Retrieve adminhtml session model object
-     *
      * @return Mage_Adminhtml_Model_Session
      */
     protected function getSession()
