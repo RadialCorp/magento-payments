@@ -26,6 +26,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
 {
     const CREDITCARD_DENIED_MESSAGE = 'Radial_CreditCard_Denied';
     const CREDITCARD_FAILED_MESSAGE = 'Radial_CreditCard_Failed';
+    const SETTLEMENT_FAILED_MESSAGE = 'Radial_Settlement_Failed';
     const CREDITCARD_AVS_FAILED_MESSAGE = 'Radial_CreditCard_AVS_Failed';
     const CREDITCARD_CVV_FAILED_MESSAGE = 'Radial_CreditCard_CVV_Failed';
     const METHOD_NOT_ALLOWED_FOR_COUNTRY = 'Radial_CreditCard_Method_Not_Allowed_For_Country';
@@ -755,10 +756,10 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         } catch (Exception $e) {
             // settlement must be allowed to fail
             // set invoice status as OPEN to trigger a  retry and notify admin
-            $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_OPEN);
-            $errorMessage = $this->helper->__(self::CREDITCARD_FAILED_MESSAGE);
+            $invoice->setIsPaid(false);
+            $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
             $this->getSession()->addNotice($errorMessage);
-            $this->logger->logException($e, $this->context->getMetaData(__CLASS__, [], $e));
+            $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
         }
         return $this;
     }
@@ -965,9 +966,9 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             // settlement must be allowed to fail
             // set invoice status as OPEN to trigger a  retry and notify admin
             $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
-            $errorMessage = $this->helper->__(self::CREDITCARD_FAILED_MESSAGE);
+            $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
             $this->getSession()->addNotice($errorMessage);
-            $this->logger->logException($e, $this->context->getMetaData(__CLASS__, [], $e));
+            $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
         }
         return $this;
     }
