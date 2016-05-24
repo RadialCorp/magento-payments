@@ -166,13 +166,13 @@ class Radial_Paypal_Model_Express_Api
         // Log the request instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Sending credit card refund request.';
+        $logMessage = 'Sending paypal refund request.';
         $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['request_body' => $sdk->getRequestBody()->serialize()]));
         $this->sendRequest($sdk);
         // Log the response instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Received credit card refund response.';
+        $logMessage = 'Received paypal refund response.';
         $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['response_body' => $sdk->getResponseBody()->serialize()]));
         $this->_handleRefundResponse($sdk, $payment);
         return $this;
@@ -202,13 +202,13 @@ class Radial_Paypal_Model_Express_Api
         // Log the request instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Sending credit card confirm funds request.';
+        $logMessage = 'Sending paypal confirm funds request.';
         $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['request_body' => $sdk->getRequestBody()->serialize()]));
         $this->sendRequest($sdk);
         // Log the response instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Received credit card confirm funds response.';
+        $logMessage = 'Received paypal confirm funds response.';
         $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['response_body' => $sdk->getResponseBody()->serialize()]));
         $this->_handleConfirmFundsResponse($sdk, $payment);
         return $this;
