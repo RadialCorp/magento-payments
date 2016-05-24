@@ -24,7 +24,6 @@ class Radial_Payments_Model_Observer
         $block = $observer->getBlock();
         if ($block instanceof Mage_Adminhtml_Block_Sales_Order_Invoice_View) {
             $block->removeButton('capture');
-            // todo add settlement retry button
         }
     }
 
