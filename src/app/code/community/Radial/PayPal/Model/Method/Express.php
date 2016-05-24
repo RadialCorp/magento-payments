@@ -177,7 +177,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         $creditmemo->save();
         parent::processCreditmemo($creditmemo, $payment);
         try {
-            $this->_api->doRefund($payment, $creditmemo->getBaseGrandTotal());
+            $this->_api->doRefund($creditmemo, $payment);
         } catch (Exception $e) {
             // settlement must be allowed to fail
             // set creditmemo status as OPEN to trigger a retry and notify admin

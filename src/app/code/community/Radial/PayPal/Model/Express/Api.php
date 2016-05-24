@@ -30,6 +30,7 @@ use eBayEnterprise\RetailOrderManagement\Payload;
 class Radial_Paypal_Model_Express_Api
 {
     const RADIAL_PAYPAL_API_FAILED = 'RADIAL_PAYPAL_API_FAILED';
+    const RADIAL_PAYPAL_DENIED_MESSAGE = 'RADIAL_PAYPAL_DENIED_MESSAGE';
 
     const PAYPAL_SETEXPRESS_REQUEST_ID_PREFIX = 'PSE-';
     const PAYPAL_GETEXPRESS_REQUEST_ID_PREFIX = 'PSG-';
@@ -47,6 +48,8 @@ class Radial_Paypal_Model_Express_Api
     protected $helper;
     /** @var Radial_Core_Helper_Data */
     protected $coreHelper;
+    /** @var Radial_Payments_Helper_Data */
+    protected $paymentsHelper;
     /** @var EbayEnterprise_MageLog_Helper_Data */
     protected $logger;
     /** @var EbayEnterprise_MageLog_Helper_Context */
@@ -62,6 +65,7 @@ class Radial_Paypal_Model_Express_Api
      *     -  'selection_helper' => Radial_PayPal_Helper_Item_Selection
      *     -  'helper' => Radial_PayPal_Helper_Data
      *     -  'core_helper' => Radial_Core_Helper_Data
+     *     -  'payments_helper' => Radial_Payments_Helper_Data
      *     -  'logger' => EbayEnterprise_MageLog_Helper_Data
      *     -  'context' => EbayEnterprise_MageLog_Helper_Context
      */
@@ -71,12 +75,14 @@ class Radial_Paypal_Model_Express_Api
             $this->selectionHelper,
             $this->helper,
             $this->coreHelper,
+            $this->paymentsHelper,
             $this->logger,
             $this->logContext
         ) = $this->checkTypes(
             $this->nullCoalesce($initParams, 'selection_helper', Mage::helper('radial_paypal/item_selection')),
             $this->nullCoalesce($initParams, 'helper', Mage::helper('radial_paypal')),
             $this->nullCoalesce($initParams, 'core_helper', Mage::helper('radial_core')),
+            $this->nullCoalesce($initParams, 'payments_helper', Mage::helper('radial_payments')),
             $this->nullCoalesce($initParams, 'logger', Mage::helper('ebayenterprise_magelog')),
             $this->nullCoalesce($initParams, 'log_context', Mage::helper('ebayenterprise_magelog/context'))
         );
@@ -87,8 +93,10 @@ class Radial_Paypal_Model_Express_Api
     /**
      * Type hinting for self::__construct $initParams
      *
+     * @param Radial_PayPal_Helper_Item_Selection
      * @param Radial_PayPal_Helper_Data
      * @param Radial_Core_Helper_Data
+     * @param Radial_Payments_Helper_Data
      * @param EbayEnterprise_MageLog_Helper_Data
      * @param EbayEnterprise_MageLog_Helper_Context
      * @return array
@@ -97,6 +105,7 @@ class Radial_Paypal_Model_Express_Api
         Radial_PayPal_Helper_Item_Selection $selectionHelper,
         Radial_PayPal_Helper_Data $helper,
         Radial_Core_Helper_Data $coreHelper,
+        Radial_Payments_Helper_Data $paymentsHelper,
         EbayEnterprise_MageLog_Helper_Data $logger,
         EbayEnterprise_MageLog_Helper_Context $logContext
     ) {
@@ -144,11 +153,8 @@ class Radial_Paypal_Model_Express_Api
         return $this;
     }
     
-    public function doRefund(Varien_Object $payment, $amount)
+    public function doRefund($creditmemo, $payment)
     {
-        if ($amount <= 0) {
-            Mage::throwException($this->helper->__('Invalid amount for refund.'));
-        }
         if (!$payment->getParentTransactionId()) {
             Mage::throwException($this->helper->__('Invalid transaction ID.'));
         }
@@ -156,7 +162,7 @@ class Radial_Paypal_Model_Express_Api
             $this->config->apiOperationDoSettlement,
             [static::TENDER_TYPE_PAYPAL]
         );
-        $this->_prepareRefundRequest($sdk, $payment);
+        $this->_prepareRefundRequest($sdk, $creditmemo, $payment);
         Mage::dispatchEvent('radial_paypal_refund_request_send_before', [
             'payload' => $sdk->getRequestBody(),
             'payment' => $payment,
@@ -241,7 +247,7 @@ class Radial_Paypal_Model_Express_Api
     {
         /** @var Payload\Payment\ConfirmFundsReply $response */
         $response = $sdk->getResponseBody();
-        return $this->_validateConfirmFundsResponse($response);
+        return $this->_validateConfirmFundsResponse($response, $payment);
     }
     /**
      * Fill out the request payload with payment data and update the API request
@@ -258,16 +264,14 @@ class Radial_Paypal_Model_Express_Api
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
-            ->setPanIsToken(true)
             ->setAmount((float)$invoice->getGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setTaxAmount((float)$invoice->getTaxAmount())
             ->setClientContext($payment->getTransactionId())
-            ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_CAPTURE)
-            ->setFinalDebit($this->helper->isFinalDebit($payment, $amountToCapture) ? 1 : 0)
+            ->setFinalDebit($this->paymentsHelper->isFinalDebit($order) ? 1 : 0)
+            ->setInvoiceId($invoice->getIncrementId())
             ->setOrderId($order->getIncrementId());
         return $this;
     }
@@ -279,28 +283,22 @@ class Radial_Paypal_Model_Express_Api
      * @param string $type
      * @return static
      */
-    protected function _prepareRefundRequest(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    protected function _prepareRefundRequest(Api\IBidirectionalApi $sdk, $creditmemo, $payment)
     {
         /** @var Payload\Payment\PaymentSettlementRequest $request */
         $request = $sdk->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
-        // @see Mage_Sales_Model_Order_Payment::refund
-        $creditmemo = $payment->getCreditmemo();
-        /** @var Mage_Sales_Model_Order_Invoice $invoice */
         $invoice = $creditmemo->getInvoice();
-        $amountToCapture = $invoice->getGrandTotal();
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
-            ->setPanIsToken(true)
-            ->setAmount((float)$amountToCapture)
+            ->setAmount((float)$creditmemo->getGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
-            ->setTaxAmount((float)$invoice->getTaxAmount())
+            ->setTaxAmount((float)$creditmemo->getTaxAmount())
             ->setClientContext($payment->getParentTransactionId())
-            ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_REFUND)
             ->setFinalDebit(0)
+            ->setInvoiceId($invoice->getIncrementId())
             ->setOrderId($order->getIncrementId());
         return $this;
     }
@@ -319,8 +317,6 @@ class Radial_Paypal_Model_Express_Api
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
-            ->setPanIsToken(true)
             ->setAmount((float)$amount)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
@@ -332,15 +328,17 @@ class Radial_Paypal_Model_Express_Api
      * @param Payload\Payment\IConfirmFundsReply $response
      * @return self
      */
-    protected function _validateConfirmFundsResponse(Payload\Payment\IConfirmFundsReply $response)
+    protected function _validateConfirmFundsResponse(Payload\Payment\IConfirmFundsReply $response, $payment)
     {
         // if auth was a complete success, accept the response and move on
         if ($response->isSuccess()) {
             return $this;
         }
-        // auth failed for some other reason, possibly declined, making it unacceptable
-        // send user to payment step of checkout with an error message
-        $this->_failPaymentRequest(self::PAYMENT_CONFIRM_FUNDS_FAILED);
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        $errorMessage = $this->helper->__(self::RADIAL_PAYPAL_DENIED_MESSAGE);
+        $this->paymentsHelper->failConfirmFundsRequest($order, $errorMessage);
+        $this->_failPaymentRequest($errorMessage);
         return $this;
     }
     /**

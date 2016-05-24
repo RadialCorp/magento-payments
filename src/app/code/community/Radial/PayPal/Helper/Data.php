@@ -68,34 +68,4 @@ class Radial_PayPal_Helper_Data extends Mage_Core_Helper_Abstract implements Rad
     {
         return Mage::app()->getStore()->getCurrentCurrencyCode();
     }
-
-    /**
-     * @param Varien_Object $payment
-     * @param $amountToCapture
-     * @return bool
-     */
-    public function isFinalDebit(Varien_Object $payment, $amountToCapture)
-    {
-        /** @var Mage_Sales_Model_Order $order */
-        $order = $payment->getOrder();
-        $amountToCapture = $this->_formatAmount($amountToCapture);
-        $orderGrandTotal = $this->_formatAmount($order->getBaseGrandTotal());
-        if ($orderGrandTotal == $this->_formatAmount($payment->getBaseAmountPaid()) + $amountToCapture) {
-            if (false !== $payment->getShouldCloseParentTransaction()) {
-                $payment->setShouldCloseParentTransaction(true);
-            }
-            return true;
-        }
-        return false;
-    }
-    /**
-     * Round up and cast specified amount to float or string
-     *
-     * @param string|float
-     * @return string|float
-     */
-    protected function _formatAmount($amount)
-    {
-        return Mage::app()->getStore()->roundPrice($amount);
-    }
 }
