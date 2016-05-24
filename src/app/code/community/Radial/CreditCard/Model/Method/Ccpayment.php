@@ -1011,6 +1011,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_REFUND)
             ->setFinalDebit(0)
+            ->setInvoiceId($invoice->getIncrementId())
             ->setOrderId($order->getIncrementId());
         return $this;
     }
