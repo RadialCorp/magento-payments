@@ -821,7 +821,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_CAPTURE)
-            ->setFinalDebit($this->isFinalDebit($payment, $amountToCapture) ? 1 : 0)
+            ->setFinalDebit($this->isFinalDebit($order))
             ->setOrderId($order->getIncrementId());
         return $this;
     }
@@ -879,21 +879,19 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         return $this;
     }
     /**
-     * @param Varien_Object $payment
-     * @param $amountToCapture
+     * Determine if this is the final settlement call
+     * @param Mage_Sales_Model_Order
      * @return bool
      */
-    protected function isFinalDebit(Varien_Object $payment, $amountToCapture)
+    protected function isFinalDebit(Mage_Sales_Model_Order $order)
     {
-        // todo determine if all qtys have shipped
-        /** @var Mage_Sales_Model_Order $order */
-        $order = $payment->getOrder();
-        $amountToCapture = $this->_formatAmount($amountToCapture);
-        $orderGrandTotal = $this->_formatAmount($order->getBaseGrandTotal());
-        if ($orderGrandTotal == $this->_formatAmount($payment->getBaseAmountPaid()) + $amountToCapture) {
-            return true;
+        /** @var Mage_Sales_Model_Order_Item $item */
+        foreach ($order->getAllItems() as $item) {
+            if ($item->getQtyOrdered() > $item->getQtyInvoiced()) {
+               return false;
+            }
         }
-        return false;
+        return true;
     }
     /**
      * Round up and cast specified amount to float or string
