@@ -28,6 +28,11 @@ http://opensource.org/licenses/osl-3.0.php
             <radial_payments>
                 <class>Radial_Payments_Model</class>
             </radial_payments>
+            <sales>
+                <rewrite>
+                    <order_invoice>Radial_Payments_Model_Order_Invoice</order_invoice>
+                </rewrite>
+            </sales>
         </models>
         <events>
             <sales_order_invoice_register>

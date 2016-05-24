@@ -817,7 +817,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     protected function _handleSettlementResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
-        // todo set invoice state
         return $this;
     }
     /**
