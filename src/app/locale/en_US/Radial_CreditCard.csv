@@ -1,3 +1,4 @@
+"Radial_CreditCard_Denied", "The response from the gateway determined that funds are not available."
 "Radial_CreditCard_Failed", "The credit card could not be processed, please try again."
 "Radial_CreditCard_Avs_Failed", "Invalid billing address"
 "Radial_CreditCard_Cvv_Failed", "Invalid card identification number"

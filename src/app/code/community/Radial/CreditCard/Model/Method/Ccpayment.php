@@ -24,6 +24,7 @@ use Psr\Log\NullLogger;
 
 class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method_Cc
 {
+    const CREDITCARD_DENIED_MESSAGE = 'Radial_CreditCard_Denied';
     const CREDITCARD_FAILED_MESSAGE = 'Radial_CreditCard_Failed';
     const CREDITCARD_AVS_FAILED_MESSAGE = 'Radial_CreditCard_AVS_Failed';
     const CREDITCARD_CVV_FAILED_MESSAGE = 'Radial_CreditCard_CVV_Failed';
@@ -98,6 +99,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected $_coreHelper;
     /** @var Mage_Core_Helper_Http */
     protected $_httpHelper;
+    /** @var Radial_Payments_Helper_Data */
+    protected $_paymentsHelper;
 
     /** @var EbayEnterprise_MageLog_Helper_Data */
     protected $_logger;
@@ -117,6 +120,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      *                          -  'helper' => Radial_CreditCard_Helper_Data
      *                          -  'core_helper' => Radial_Core_Helper_Data
      *                          -  'http_helper' => Mage_Core_Helper_Http
+     *                          -  'payments_helper' => Radial_Payments_Helper_Data
      *                          -  'logger' => EbayEnterprise_MageLog_Helper_Data
      *                          -  'context' => EbayEnterprise_MageLog_Helper_Context
      *                          -  'api_logger' => LoggerInterface
@@ -127,6 +131,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->_helper,
             $this->_coreHelper,
             $this->_httpHelper,
+            $this->_paymentsHelper,
             $this->_logger,
             $this->_context,
             $this->_apiLogger
@@ -134,6 +139,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->_nullCoalesce($initParams, 'helper', Mage::helper('radial_creditcard')),
             $this->_nullCoalesce($initParams, 'core_helper', Mage::helper('radial_core')),
             $this->_nullCoalesce($initParams, 'http_helper', Mage::helper('core/http')),
+            $this->_nullCoalesce($initParams, 'payments_helper', Mage::helper('radial_payments')),
             $this->_nullCoalesce($initParams, 'logger', Mage::helper('ebayenterprise_magelog')),
             $this->_nullCoalesce($initParams, 'context', Mage::helper('ebayenterprise_magelog/context')),
             $this->_nullCoalesce($initParams, 'api_logger', new NullLogger)
@@ -145,6 +151,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * @param Radial_CreditCard_Helper_Data
      * @param Radial_Core_Helper_Data
      * @param Mage_Core_Helper_Http
+     * @param Radial_Payments_Helper_Data
      * @param Mage_Checkout_Model_Session
      * @param EbayEnterprise_MageLog_Helper_Data
      * @param EbayEnterprise_MageLog_Helper_Context
@@ -155,6 +162,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         Radial_CreditCard_Helper_Data $helper,
         Radial_Core_Helper_Data $coreHelper,
         Mage_Core_Helper_Http $httpHelper,
+        Radial_Payments_Helper_Data $paymentsHelper,
         EbayEnterprise_MageLog_Helper_Data $logger,
         EbayEnterprise_MageLog_Helper_Context $context,
         LoggerInterface $apiLogger
@@ -461,13 +469,30 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $this->_getCheckoutSession()->setGotoSection($step);
         return $this;
     }
+
+    /**
+     * Fail the auth request by setting a checkout step to return to and throwing
+     * an exception.
+     * @see self::_setCheckoutStep for available checkout steps to return to
+     * @param Varien_Object $payment
+     * @throws Mage_Core_Exception
+     */
+    protected function _failConfirmFundsRequest(Varien_Object $payment)
+    {
+        /** @var Mage_Sales_Model_Order $order */
+        $order = $payment->getOrder();
+        $errorMessage = $this->_helper->__(self::CREDITCARD_DENIED_MESSAGE);
+        $this->_paymentsHelper->failConfirmFundsRequest($order, $errorMessage);
+        throw Mage::exception('Radial_CreditCard', $errorMessage);
+    }
+
     /**
      * Fail the auth request by setting a checkout step to return to and throwing
      * an exception.
      * @see self::_setCheckoutStep for available checkout steps to return to
      * @param string $errorMessage
      * @param string $returnStep Step of checkout to send the user to
-     * @throws Radial_CreditCard_Exception Always
+     * @throws Mage_Core_Exception
      */
     protected function _failPaymentRequest($errorMessage, $returnStep = 'payment')
     {
@@ -488,13 +513,17 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
         );
     }
+
     /**
-     * Get the API SDK for the payment capture request.
-     * @param Varien_Object $payment
+     * Get the API SDK for the payment settlement request.
+     * @param Mage_Sales_Model_Order_Invoice
      * @return Api\IBidirectionalApi
+     * @throws Mage_Core_Exception
      */
-    protected function _getSettlementApi(Varien_Object $payment)
+    protected function _getSettlementApi(Mage_Sales_Model_Order_Invoice $invoice)
     {
+        $order = $invoice->getOrder();
+        $payment = $order->getPayment();
         $config = $this->_helper->getConfigModel();
         return $this->_getApi(
             $config->apiService,
@@ -575,6 +604,47 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         return $this;
     }
     /**
+     * Make the API request and handle any exceptions.
+     * @param ApiIBidirectionalApi $api
+     * @return self
+     */
+    protected function _sendRequestNoFail(Api\IBidirectionalApi $api)
+    {
+        $logger = $this->_logger;
+        $logContext = $this->_context;
+        try {
+            $api->send();
+        } catch (InvalidPayload $e) {
+            // Invalid payloads cannot be valid - log the error and fail the auth
+            $logMessage = 'Invalid payload for credit card service. See exception log for more details.';
+            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
+            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
+            // todo set invoice state to RETRY
+        } catch (NetworkError $e) {
+            // Can't accept a request that could not be made successfully - log the error and fail the request.
+            $logMessage = 'Caught a network error sending credit card service. See exception log for more details.';
+            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
+            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
+            // todo set invoice state to RETRY
+        } catch (UnsupportedOperation $e) {
+            $logMessage = 'The credit card service operation is unsupported in the current configuration. See exception log for more details.';
+            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
+            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
+            // todo set invoice state to RETRY
+        } catch (UnsupportedHttpAction $e) {
+            $logMessage = 'The credit card service operation is configured with an unsupported HTTP action. See exception log for more details.';
+            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
+            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
+            // todo set invoice state to RETRY
+        } catch (Exception $e) {
+            $logMessage = 'Encountered unexpected exception from the credit card service operation. See exception log for more details.';
+            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
+            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
+            // todo set invoice state to RETRY
+        }
+        return $this;
+    }
+    /**
      * Update payment objects with details of the auth request and response. Validate
      * that a successful response was received.
      * @param ApiIBidirectionalApi $api
@@ -596,10 +666,10 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * @return self
      * @throws Mage_Core_Exception
      */
-    public function confirm(Varien_Object $payment, $amount)
+    public function capture(Varien_Object $payment, $amount)
     {
         if ($amount <= 0) {
-            Mage::throwException($this->_helper->__('Invalid amount to confirm funds.'));
+            Mage::throwException($this->_helper->__('Invalid amount to capture.'));
         }
         $api = $this->_getConfirmFundsApi($payment);
         $this->_prepareConfirmFundsRequest($api, $payment, $amount);
@@ -634,14 +704,14 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         /** @var Payload\Payment\ConfirmFundsReply $response */
         $response = $api->getResponseBody();
-        return $this->_validateConfirmFundsResponse($response);
+        return $this->_validateConfirmFundsResponse($response, $payment);
     }
     /**
      * Check for the response to be valid.
      * @param Payload\Payment\IConfirmFundsReply $response
      * @return self
      */
-    protected function _validateConfirmFundsResponse(Payload\Payment\IConfirmFundsReply $response)
+    protected function _validateConfirmFundsResponse(Payload\Payment\IConfirmFundsReply $response, Varien_Object $payment)
     {
         // if auth was a complete success, accept the response and move on
         if ($response->isSuccess()) {
@@ -649,7 +719,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         }
         // auth failed for some other reason, possibly declined, making it unacceptable
         // send user to payment step of checkout with an error message
-        $this->_failPaymentRequest(self::CREDITCARD_FAILED_MESSAGE, 'payment');
+        $this->_failConfirmFundsRequest($payment);
         return $this;
     }
     /**
@@ -691,58 +761,55 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         );
     }
     /**
-     * Send capture request
+     * Send settlement request
      *
      * @param Mage_Sales_Model_Order_Payment $payment
      * @param float $amount
      * @return self
      * @throws Mage_Core_Exception
      */
-    public function capture(Varien_Object $payment, $amount)
+    public function settlement(Mage_Sales_Model_Order_Invoice $invoice, $amount)
     {
         if ($amount <= 0) {
-            Mage::throwException($this->_helper->__('Invalid amount for capture.'));
+            $this->_logger->error($this->_helper->__('Invalid amount for settlement.'));
+            return $this;
         }
-        $api = $this->_getSettlementApi($payment);
-        $this->_prepareCaptureRequest($api, $payment);
-        Mage::dispatchEvent('radial_creditcard_capture_request_send_before', [
+        $api = $this->_getSettlementApi($invoice);
+        $this->_prepareSettlementRequest($api, $invoice);
+        Mage::dispatchEvent('radial_creditcard_settlement_request_send_before', [
             'payload' => $api->getRequestBody(),
-            'payment' => $payment,
+            'invoice' => $invoice,
         ]);
         // Log the request instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Sending credit card capture request.';
+        $logMessage = 'Sending credit card settlement request.';
         $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
         $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
-        $this->_sendRequest($api);
+        $this->_sendRequestNoFail($api);
         // Log the response instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
-        $logMessage = 'Received credit card capture response.';
+        $logMessage = 'Received credit card settlement response.';
         $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
         $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
-        $this->_handleCaptureResponse($api, $payment);
+        $this->_handleSettlementResponse($api, $invoice);
         return $this;
     }
     /**
      * Fill out the request payload with payment data and update the API request
      * body with the complete request.
      * @param Api\IBidirectionalApi $api
-     * @param Varien_Object $payment Most likely a Mage_Sales_Model_Order_Payment
+     * @param Mage_Sales_Model_Order_Invoice $invoice
      * @param string $type
      * @return static
      */
-    protected function _prepareCaptureRequest(Api\IBidirectionalApi $api, Varien_Object $payment)
+    protected function _prepareSettlementRequest(Api\IBidirectionalApi $api, Mage_Sales_Model_Order_Invoice $invoice)
     {
         /** @var Payload\Payment\PaymentSettlementRequest $request */
         $request = $api->getRequestBody();
-        /** @var Mage_Sales_Model_Order $order */
-        $order = $payment->getOrder();
-        /** @var Mage_Sales_Model_Order_Invoice $invoice */
-        // Invoice has been assigned to payment.
-        // @see Radial_Payments_Model_Observer::handleInvoiceCaptureEvent
-        $invoice = $payment->getInvoiceForCapture();
+        $order = $invoice->getOrder();
+        $payment = $order->getPayment();
         $amountToCapture = $invoice->getGrandTotal();
         $request
             ->setIsEncrypted($this->_isUsingClientSideEncryption)
@@ -788,8 +855,9 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * @param Varien_Object        $payment
      * @return self
      */
-    protected function _handleCaptureResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    protected function _handleSettlementResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
     {
+        // todo set invoice state
         return $this;
     }
     /**
@@ -817,14 +885,12 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     protected function isFinalDebit(Varien_Object $payment, $amountToCapture)
     {
+        // todo determine if all qtys have shipped
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
         $amountToCapture = $this->_formatAmount($amountToCapture);
         $orderGrandTotal = $this->_formatAmount($order->getBaseGrandTotal());
         if ($orderGrandTotal == $this->_formatAmount($payment->getBaseAmountPaid()) + $amountToCapture) {
-            if (false !== $payment->getShouldCloseParentTransaction()) {
-                $payment->setShouldCloseParentTransaction(true);
-            }
             return true;
         }
         return false;
@@ -890,7 +956,11 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         if (!$payment->getParentTransactionId()) {
             Mage::throwException($this->_helper->__('Invalid transaction ID.'));
         }
-        $api = $this->_getSettlementApi($payment);
+        // @see Mage_Sales_Model_Order_Payment::refund
+        $creditmemo = $payment->getCreditmemo();
+        /** @var Mage_Sales_Model_Order_Invoice $invoice */
+        $invoice = $creditmemo->getInvoice();
+        $api = $this->_getSettlementApi($invoice);
         $this->_prepareRefundRequest($api, $payment);
         Mage::dispatchEvent('radial_creditcard_refund_request_send_before', [
             'payload' => $api->getRequestBody(),
@@ -944,17 +1014,5 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setFinalDebit(0)
             ->setOrderId($order->getIncrementId());
         return $this;
-    }
-    /**
-     * @param Mage_Sales_Model_Order_Invoice $invoice
-     * @param Mage_Sales_Model_Order_Payment $payment
-     * @return Mage_Payment_Model_Method_Abstract
-     */
-    public function processBeforeRefund($invoice, $payment)
-    {
-        // Invoice has been assigned to payment.
-        // @see self::_prepareSettlementRequest
-        $payment->setInvoiceForCapture($invoice);
-        return parent::processBeforeRefund($invoice, $payment);
     }
 }
