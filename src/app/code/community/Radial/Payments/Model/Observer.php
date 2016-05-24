@@ -111,7 +111,7 @@ class Radial_Payments_Model_Observer
             } catch (Exception $e) {
                 // settlement must be allowed to fail
                 // set invoice status to retry and notify admin
-                $invoice->setState(Radial_Payments_Model_Order_Invoice::STATE_RETRY);
+                $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_OPEN);
                 $errorMessage = $this->helper->__(self::SETTLEMENT_FAILED);
                 $this->_getSession()->addNotice($errorMessage);
                 $this->logger->logException($e, $this->context->getMetaData(__CLASS__, [], $e));
