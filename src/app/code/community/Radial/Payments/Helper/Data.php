@@ -16,6 +16,22 @@
 class Radial_Payments_Helper_Data extends Mage_Core_Helper_Abstract
 {
     /**
+     * Determine if this is the final settlement call
+     * @param Mage_Sales_Model_Order
+     * @return bool
+     */
+    public function isFinalDebit(Mage_Sales_Model_Order $order)
+    {
+        /** @var Mage_Sales_Model_Order_Item $item */
+        foreach ($order->getAllItems() as $item) {
+            if ($item->getQtyOrdered() > $item->getQtyInvoiced()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
      * Failed confirm funds request must cancel remaining items
      * @param Mage_Sales_Model_Order
      * @param string

@@ -202,7 +202,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         $invoice->save();
         parent::processInvoice($invoice, $payment);
         try {
-            $this->_api->doCapture($payment, $invoice->getBaseGrandTotal());
+            $this->_api->doCapture($invoice, $payment);
         } catch (Exception $e) {
             // settlement must be allowed to fail
             // set invoice status as OPEN to trigger a  retry and notify admin

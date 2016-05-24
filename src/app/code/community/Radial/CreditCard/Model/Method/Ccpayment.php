@@ -801,7 +801,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_CAPTURE)
-            ->setFinalDebit($this->isFinalDebit($order) ? 1 : 0)
+            ->setFinalDebit($this->_paymentsHelper->isFinalDebit($order) ? 1 : 0)
             ->setInvoiceId($invoice->getIncrementId())
             ->setOrderId($order->getIncrementId());
         return $this;
@@ -857,21 +857,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected function _handleCreditResponse(Api\IBidirectionalApi $api, Varien_Object $creditmemo, Varien_Object $payment)
     {
         return $this;
-    }
-    /**
-     * Determine if this is the final settlement call
-     * @param Mage_Sales_Model_Order
-     * @return bool
-     */
-    protected function isFinalDebit(Mage_Sales_Model_Order $order)
-    {
-        /** @var Mage_Sales_Model_Order_Item $item */
-        foreach ($order->getAllItems() as $item) {
-            if ($item->getQtyOrdered() > $item->getQtyInvoiced()) {
-               return false;
-            }
-        }
-        return true;
     }
     /**
      * Void the payment

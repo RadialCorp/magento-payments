@@ -117,19 +117,17 @@ class Radial_Paypal_Model_Express_Api
         return isset($arr[$field]) ? $arr[$field] : $default;
     }
     
-    public function doCapture(Varien_Object $payment, $amount)
+    public function doCapture($invoice, $payment)
     {
-        if ($amount <= 0) {
-            Mage::throwException($this->helper->__('Invalid amount for capture.'));
-        }
         $sdk = $this->getSdk(
             $this->config->apiOperationDoSettlement,
             [static::TENDER_TYPE_PAYPAL]
         );
-        $this->_prepareCaptureRequest($sdk, $payment);
+        $this->_prepareCaptureRequest($sdk, $invoice, $payment);
         Mage::dispatchEvent('radial_paypal_capture_request_send_before', [
             'payload' => $sdk->getRequestBody(),
             'payment' => $payment,
+            'invoice' => $invoice,
         ]);
         // Log the request instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
@@ -253,21 +251,16 @@ class Radial_Paypal_Model_Express_Api
      * @param string $type
      * @return static
      */
-    protected function _prepareCaptureRequest(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    protected function _prepareCaptureRequest(Api\IBidirectionalApi $sdk, $invoice, $payment)
     {
         /** @var Payload\Payment\PaymentSettlementRequest $request */
         $request = $sdk->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
-        /** @var Mage_Sales_Model_Order_Invoice $invoice */
-        // Invoice has been assigned to payment.
-        // @see Radial_Payments_Model_Observer::handleInvoiceCaptureEvent
-        $invoice = $payment->getInvoiceForCapture();
-        $amountToCapture = $invoice->getGrandTotal();
         $request
             ->setIsEncrypted($this->_isUsingClientSideEncryption)
             ->setPanIsToken(true)
-            ->setAmount((float)$amountToCapture)
+            ->setAmount((float)$invoice->getGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setTaxAmount((float)$invoice->getTaxAmount())
             ->setClientContext($payment->getTransactionId())
@@ -330,7 +323,6 @@ class Radial_Paypal_Model_Express_Api
             ->setPanIsToken(true)
             ->setAmount((float)$amount)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
-            ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
             ->setOrderId($order->getIncrementId());
         return $this;
