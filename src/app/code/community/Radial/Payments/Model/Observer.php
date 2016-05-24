@@ -113,7 +113,7 @@ class Radial_Payments_Model_Observer
                 // set invoice status to retry and notify admin
                 $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_OPEN);
                 $errorMessage = $this->helper->__(self::SETTLEMENT_FAILED);
-                $this->_getSession()->addNotice($errorMessage);
+                $this->getSession()->addNotice($errorMessage);
                 $this->logger->logException($e, $this->context->getMetaData(__CLASS__, [], $e));
             }
         }
@@ -136,7 +136,7 @@ class Radial_Payments_Model_Observer
      *
      * @return Mage_Adminhtml_Model_Session
      */
-    protected function _getSession()
+    protected function getSession()
     {
         return Mage::getSingleton('adminhtml/session');
     }
