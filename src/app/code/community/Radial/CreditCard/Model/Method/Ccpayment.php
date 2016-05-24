@@ -604,47 +604,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         return $this;
     }
     /**
-     * Make the API request and handle any exceptions.
-     * @param ApiIBidirectionalApi $api
-     * @return self
-     */
-    protected function _sendRequestNoFail(Api\IBidirectionalApi $api)
-    {
-        $logger = $this->_logger;
-        $logContext = $this->_context;
-        try {
-            $api->send();
-        } catch (InvalidPayload $e) {
-            // Invalid payloads cannot be valid - log the error and fail the auth
-            $logMessage = 'Invalid payload for credit card service. See exception log for more details.';
-            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
-            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
-            // todo set invoice state to RETRY
-        } catch (NetworkError $e) {
-            // Can't accept a request that could not be made successfully - log the error and fail the request.
-            $logMessage = 'Caught a network error sending credit card service. See exception log for more details.';
-            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
-            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
-            // todo set invoice state to RETRY
-        } catch (UnsupportedOperation $e) {
-            $logMessage = 'The credit card service operation is unsupported in the current configuration. See exception log for more details.';
-            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
-            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
-            // todo set invoice state to RETRY
-        } catch (UnsupportedHttpAction $e) {
-            $logMessage = 'The credit card service operation is configured with an unsupported HTTP action. See exception log for more details.';
-            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
-            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
-            // todo set invoice state to RETRY
-        } catch (Exception $e) {
-            $logMessage = 'Encountered unexpected exception from the credit card service operation. See exception log for more details.';
-            $logger->warning($logMessage, $logContext->getMetaData(__CLASS__, ['exception_message' => $e->getMessage()]));
-            $logger->logException($e, $logContext->getMetaData(__CLASS__, [], $e));
-            // todo set invoice state to RETRY
-        }
-        return $this;
-    }
-    /**
      * Update payment objects with details of the auth request and response. Validate
      * that a successful response was received.
      * @param ApiIBidirectionalApi $api
@@ -786,7 +745,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $logMessage = 'Sending credit card settlement request.';
         $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
         $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
-        $this->_sendRequestNoFail($api);
+        $this->_sendRequest($api);
         // Log the response instead of expecting the SDK to have logged it.
         // Allows the data to be properly scrubbed of any PII or other sensitive
         // data prior to writing the log files.
