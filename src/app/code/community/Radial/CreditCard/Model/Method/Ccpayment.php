@@ -26,7 +26,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
 {
     const CREDITCARD_DENIED_MESSAGE = 'Radial_CreditCard_Denied';
     const CREDITCARD_FAILED_MESSAGE = 'Radial_CreditCard_Failed';
-    const SETTLEMENT_FAILED_MESSAGE = 'Radial_Settlement_Failed';
+    const SETTLEMENT_FAILED_MESSAGE = 'Radial_CreditCard_Settlement_Failed';
     const CREDITCARD_AVS_FAILED_MESSAGE = 'Radial_CreditCard_AVS_Failed';
     const CREDITCARD_CVV_FAILED_MESSAGE = 'Radial_CreditCard_CVV_Failed';
     const METHOD_NOT_ALLOWED_FOR_COUNTRY = 'Radial_CreditCard_Method_Not_Allowed_For_Country';
@@ -964,7 +964,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->_handleCreditResponse($api, $creditmemo, $payment);
         } catch (Exception $e) {
             // settlement must be allowed to fail
-            // set invoice status as OPEN to trigger a  retry and notify admin
+            // set creditmemo status as OPEN to trigger a retry and notify admin
             $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
             $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
             $this->getSession()->addNotice($errorMessage);

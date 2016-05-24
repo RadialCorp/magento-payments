@@ -1,6 +1,6 @@
 "Radial_CreditCard_Denied", "The response from the gateway determined that funds are not available."
 "Radial_CreditCard_Failed", "The credit card could not be processed, please try again."
-"Radial_Settlement_Failed", "The gateway did not respond to the settlement request, this request will be retried."
+"Radial_CreditCard_Settlement_Failed", "The gateway did not respond to the settlement request, this request will be retried."
 "Radial_CreditCard_Avs_Failed", "Invalid billing address"
 "Radial_CreditCard_Cvv_Failed", "Invalid card identification number"
 "Radial_CreditCard_Method_Not_Allowed_For_Country", "Selected payment type is not allowed for billing country."

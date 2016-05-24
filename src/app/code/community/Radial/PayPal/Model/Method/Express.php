@@ -24,6 +24,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
     const CODE = 'radial_paypal_express';
 
     const PAYMENT_INFO_AUTH_REQUEST_ID = 'auth_request_id';
+    const SETTLEMENT_FAILED_MESSAGE = 'RADIAL_PAYPAL_SETTLEMENT_FAILED';
 
     protected $_code = self::CODE; // compatibility with mage payment method expectations
     protected $_formBlockType = 'radial_paypal/express_form';
@@ -69,6 +70,12 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         self::PAYMENT_INFO_AUTH_REQUEST_ID,
     );
 
+    /** @var EbayEnterprise_MageLog_Helper_Data */
+    protected $_logger;
+
+    /** @var EbayEnterprise_MageLog_Helper_Context */
+    protected $_context;
+
     /**
      * `__construct` overridden in Mage_Payment_Model_Method_Abstract as a no-op.
      * Override __construct here as the usual protected `_construct` is not called.
@@ -78,11 +85,12 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
      *                          -  'core_helper' => Radial_Core_Helper_Data
      *                          -  'config' => Radial_Core_Model_Config_Registry
      *                          -  'logger' => EbayEnterprise_MageLog_Helper_Data
+     *                          -  'context' => EbayEnterprise_MageLog_Helper_Context
      *                          -  'api' => Radial_Paypal_Model_Express_Api
      */
     public function __construct(array $initParams = array())
     {
-        list($this->_helper, $this->_coreHelper, $this->_logger, $this->_config, $this->_api)
+        list($this->_helper, $this->_coreHelper, $this->_logger, $this->_context,$this->_config, $this->_api)
             = $this->_checkTypes(
                 $this->_nullCoalesce(
                     $initParams,
@@ -98,6 +106,11 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                     $initParams,
                     'logger',
                     Mage::helper('ebayenterprise_magelog')
+                ),
+                $this->_nullCoalesce(
+                    $initParams,
+                    'context',
+                    Mage::helper('ebayenterprise_magelog/context')
                 ),
                 $this->_nullCoalesce(
                     $initParams,
@@ -119,6 +132,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
      * @param Radial_Core_Helper_Data
      * @param Mage_Core_Helper_Http
      * @param EbayEnterprise_MageLog_Helper_Data
+     * @param EbayEnterprise_MageLog_Helper_Context
      * @param Radial_Core_Model_Config_Registry
      * @param Radial_Paypal_Model_Express_Api
      *
@@ -128,10 +142,11 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         Radial_PayPal_Helper_Data $helper,
         Radial_Core_Helper_Data $coreHelper,
         EbayEnterprise_MageLog_Helper_Data $logger,
+        EbayEnterprise_MageLog_Helper_Context $context,
         Radial_Core_Model_Config_Registry $config,
         Radial_Paypal_Model_Express_Api $api
     ) {
-        return array($helper, $coreHelper, $logger, $config, $api);
+        return func_get_args();
     }
 
     /**
@@ -150,16 +165,52 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
     }
 
     /**
-     * Confirm funds method
-     *
-     * @param Varien_Object $payment
-     * @param float $amount
-     *
-     * @return Mage_Payment_Model_Abstract
+     * Invoice has been created.
+     * @param Mage_Sales_Model_Order_Creditmemo
+     * @param Mage_Sales_Model_Order_Payment
+     * @return self
+     * @throws Mage_Core_Exception
      */
-    public function confirm(Varien_Object $payment, $amount)
+    public function processCreditmemo($creditmemo, $payment)
     {
-        $this->_api->doConfirm($payment, $amount);
+        // The creditmemo must be saved before continuing.
+        $creditmemo->save();
+        parent::processCreditmemo($creditmemo, $payment);
+        try {
+            $this->_api->doRefund($payment, $creditmemo->getBaseGrandTotal());
+        } catch (Exception $e) {
+            // settlement must be allowed to fail
+            // set creditmemo status as OPEN to trigger a retry and notify admin
+            $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
+            $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
+            $this->getSession()->addNotice($errorMessage);
+            $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
+        }
+        return $this;
+    }
+
+    /**
+     * Invoice has been created.
+     * @param Mage_Sales_Model_Order_Invoice
+     * @param Mage_Sales_Model_Order_Payment
+     * @return self
+     * @throws Mage_Core_Exception
+     */
+    public function processInvoice($invoice, $payment)
+    {
+        // The invoice must be saved before continuing.
+        $invoice->save();
+        parent::processInvoice($invoice, $payment);
+        try {
+            $this->_api->doCapture($payment, $invoice->getBaseGrandTotal());
+        } catch (Exception $e) {
+            // settlement must be allowed to fail
+            // set invoice status as OPEN to trigger a  retry and notify admin
+            $invoice->setIsPaid(false);
+            $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
+            $this->getSession()->addNotice($errorMessage);
+            $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
+        }
         return $this;
     }
 
@@ -176,7 +227,8 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         if (!$this->canCapture()) {
             Mage::throwException(Mage::helper('payment')->__('Capture action is not available.'));
         }
-        $this->_api->doCapture($payment, $amount);
+        // confirm funds
+        $this->_api->doConfirm($payment, $amount);
         return $this;
     }
 
@@ -193,7 +245,6 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         if (!$this->canRefund()) {
             Mage::throwException(Mage::helper('payment')->__('Refund action is not available.'));
         }
-        $this->_api->doRefund($payment, $amount);
         return $this;
     }
 
@@ -308,5 +359,14 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
             }
         }
         return $result;
+    }
+
+    /**
+     * Retrieve adminhtml session model object
+     * @return Mage_Adminhtml_Model_Session
+     */
+    protected function getSession()
+    {
+        return Mage::getSingleton('adminhtml/session');
     }
 }
