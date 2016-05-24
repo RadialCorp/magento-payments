@@ -19,6 +19,7 @@ http://opensource.org/licenses/osl-3.0.php
             <codePool>community</codePool>
             <depends>
                 <Radial_Core/>
+                <Radial_Payments/>
                 <EbayEnterprise_MageLog/>
             </depends>
         </Radial_CreditCard>
