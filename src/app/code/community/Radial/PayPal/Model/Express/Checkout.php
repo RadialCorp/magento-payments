@@ -524,6 +524,11 @@ class Radial_PayPal_Model_Express_Checkout
         $quote->setCustomerId(null)
             ->setCustomerIsGuest(true)
             ->setCustomerGroupId(Mage_Customer_Model_Group::NOT_LOGGED_IN_ID);
+        // if customer email is not already assigned to quote
+        // use the billing address email (provided by paypal)
+        if (!$quote->getCustomerEmail()) {
+            $quote->setCustomerEmail($quote->getBillingAddress()->getEmail());
+        }
         return $this;
     }
 
