@@ -149,7 +149,7 @@ class Radial_Paypal_Model_Express_Api
         // data prior to writing the log files.
         $logMessage = 'Received paypal capture response.';
         $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['response_body' => $sdk->getResponseBody()->serialize()]));
-        $this->_handleCaptureResponse($sdk, $payment);
+        $this->_handleCaptureResponse($sdk, $invoice);
         return $this;
     }
     
@@ -178,7 +178,7 @@ class Radial_Paypal_Model_Express_Api
         // data prior to writing the log files.
         $logMessage = 'Received paypal refund response.';
         $this->logger->debug($logMessage, $this->logContext->getMetaData(__CLASS__, ['response_body' => $sdk->getResponseBody()->serialize()]));
-        $this->_handleRefundResponse($sdk, $payment);
+        $this->_handleRefundResponse($sdk, $creditmemo, $payment);
         return $this;
     }
     /**
@@ -220,20 +220,23 @@ class Radial_Paypal_Model_Express_Api
 
     /**
      * @param Api\IBidirectionalApi $sdk
-     * @param Varien_Object        $payment
+     * @param Mage_Sales_Model_Order_Invoice
      * @return self
      */
-    protected function _handleCaptureResponse(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    protected function _handleCaptureResponse(Api\IBidirectionalApi $sdk, Mage_Sales_Model_Order_Invoice $invoice)
     {
+        $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_PAID);
         return $this;
     }
     /**
      * @param Api\IBidirectionalApi $sdk
-     * @param Varien_Object        $payment
+     * @param Mage_Sales_Model_Order_Creditmemo
+     * @param Mage_Sales_Model_Order_Payment
      * @return self
      */
-    protected function _handleRefundResponse(Api\IBidirectionalApi $sdk, Varien_Object $payment)
+    protected function _handleRefundResponse(Api\IBidirectionalApi $sdk, Mage_Sales_Model_Order_Creditmemo $creditmemo, Mage_Sales_Model_Order_Payment $payment)
     {
+        $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_REFUNDED);
         return $this;
     }
     /**
@@ -267,7 +270,7 @@ class Radial_Paypal_Model_Express_Api
             ->setAmount((float)$invoice->getGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setTaxAmount((float)$invoice->getTaxAmount())
-            ->setClientContext($payment->getTransactionId())
+            ->setClientContext($invoice->getTransactionId())
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_CAPTURE)
             ->setFinalDebit($this->paymentsHelper->isFinalDebit($order) ? 1 : 0)
@@ -452,7 +455,7 @@ class Radial_Paypal_Model_Express_Api
             'status'           => $reply->getPayerStatus(),
             'response_code'    => $reply->getResponseCode(),
             'billing_address'  => [
-                'street'      => $reply->getBillingLines(),
+                'street'      => stripcslashes($reply->getBillingLines()),
                 'city'        => $reply->getBillingCity(),
                 'region_code' => $reply->getBillingMainDivision(),
                 'postcode'    => $reply->getBillingPostalCode(),
@@ -460,7 +463,7 @@ class Radial_Paypal_Model_Express_Api
                 'status'      => $reply->getBillingAddressStatus(),
             ],
             'shipping_address' => [
-                'street'      => $reply->getShipToLines(),
+                'street'      => stripcslashes($reply->getShipToLines()),
                 'city'        => $reply->getShipToCity(),
                 'region_code' => $reply->getShipToMainDivision(),
                 'postcode'    => $reply->getShipToPostalCode(),

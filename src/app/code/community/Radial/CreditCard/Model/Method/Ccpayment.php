@@ -833,11 +833,12 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     }
     /**
      * @param Api\IBidirectionalApi $api
-     * @param Varien_Object        $payment
+     * @param Mage_Sales_Model_Order_Invoice
      * @return self
      */
-    protected function _handleDebitResponse(Api\IBidirectionalApi $api, Varien_Object $payment)
+    protected function _handleDebitResponse(Api\IBidirectionalApi $api, Mage_Sales_Model_Order_Invoice $invoice)
     {
+        $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_PAID);
         return $this;
     }
     /**
@@ -849,13 +850,16 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         return $this;
     }
+
     /**
      * @param Api\IBidirectionalApi $api
-     * @param Varien_Object        $payment
-     * @return self
+     * @param Mage_Sales_Model_Order_Creditmemo
+     * @param Mage_Sales_Model_Order_Payment
+     * @return static
      */
-    protected function _handleCreditResponse(Api\IBidirectionalApi $api, Varien_Object $creditmemo, Varien_Object $payment)
+    protected function _handleCreditResponse(Api\IBidirectionalApi $api, Mage_Sales_Model_Order_Creditmemo $creditmemo, Mage_Sales_Model_Order_Payment $payment)
     {
+        $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_REFUNDED);
         return $this;
     }
     /**

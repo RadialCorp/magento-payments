@@ -24,5 +24,40 @@ http://opensource.org/licenses/osl-3.0.php
                 <class>Radial_Payments_Helper</class>
             </radial_payments>
         </helpers>
+        <models>
+            <radial_payments>
+                <class>Radial_Payments_Model</class>
+            </radial_payments>
+        </models>
+        <events>
+            <core_block_abstract_to_html_before>
+                <observers>
+                    <radial_payments_capture_observer>
+                        <type>model</type>
+                        <class>radial_payments/observer</class>
+                        <method>handleInvoiceViewEvent</method>
+                    </radial_payments_capture_observer>
+                </observers>
+            </core_block_abstract_to_html_before>
+        </events>
     </global>
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <radial_payments before="Mage_Adminhtml">Radial_Payments_Adminhtml</radial_payments>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
+    <crontab>
+        <jobs>
+            <radial_payments_retry_settlements>
+                <schedule><cron_expr>*/5 * * * *</cron_expr></schedule>
+                <run><model>radial_payments/cron::retrySettlements</model></run>
+            </radial_payments_retry_settlements>
+        </jobs>
+    </crontab>
 </config>
