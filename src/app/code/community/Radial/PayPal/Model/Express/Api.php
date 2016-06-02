@@ -262,6 +262,7 @@ class Radial_Paypal_Model_Express_Api
      */
     protected function _prepareCaptureRequest(Api\IBidirectionalApi $sdk, $invoice, $payment)
     {
+        $this->logger->debug($invoice->getTransactionId());
         /** @var Payload\Payment\PaymentSettlementRequest $request */
         $request = $sdk->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
@@ -297,7 +298,7 @@ class Radial_Paypal_Model_Express_Api
             ->setAmount((float)$creditmemo->getGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setTaxAmount((float)$creditmemo->getTaxAmount())
-            ->setClientContext($payment->getParentTransactionId())
+            ->setClientContext($creditmemo->getTransactionId())
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_REFUND)
             ->setFinalDebit(0)
