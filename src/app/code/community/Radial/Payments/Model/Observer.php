@@ -42,4 +42,12 @@ class Radial_Payments_Model_Observer
             }
         }
     }
+
+    public function handlePaymentSettlementsStatusEvent(Varien_Event_Observer $observer)
+    {
+        Mage::getModel(
+            'radial_payments/events_settlementStatus',
+            ['payload' => $observer->getEvent()->getPayload()]
+        )->process();
+    }
 }

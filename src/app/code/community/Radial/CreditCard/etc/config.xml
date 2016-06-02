@@ -34,26 +34,6 @@ http://opensource.org/licenses/osl-3.0.php
                 <class>Radial_CreditCard_Helper</class>
             </radial_creditcard>
         </helpers>
-        <events>
-            <ebayenterprise_order_create_payment>
-                <observers>
-                    <radial_creditcard_order_create_payment_observer>
-                        <type>model</type>
-                        <class>radial_creditcard/observer</class>
-                        <method>handleOrderCreatePaymentEvent</method>
-                    </radial_creditcard_order_create_payment_observer>
-                </observers>
-            </ebayenterprise_order_create_payment>
-            <radial_amqp_message_payments_settlements_status>
-                <observers>
-                    <radial_creditcard_payments_settlements_status_observer>
-                        <type>model</type>
-                        <class>radial_creditcard/observer</class>
-                        <method>handlePaymentSettlementsStatusEvent</method>
-                    </radial_creditcard_payments_settlements_status_observer>
-                </observers>
-            </radial_amqp_message_payments_settlements_status>
-        </events>
     </global>
     <frontend>
         <layout>

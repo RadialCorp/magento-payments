@@ -16,22 +16,6 @@
 class Radial_CreditCard_Model_Observer
 {
     /**
-     * add paypal payment payloads to the order create
-     * request.
-     * @param  Varien_Event_Observer $observer
-     * @return self
-     */
-    public function handleOrderCreatePaymentEvent(Varien_Event_Observer $observer)
-    {
-        $event = $observer->getEvent();
-        $order = $event->getOrder();
-        $processedPayments = $event->getProcessedPayments();
-        $paymentContainer = $event->getPaymentContainer();
-        Mage::getModel('radial_creditcard/order_create_payment')
-            ->addPaymentsToPayload($order, $paymentContainer, $processedPayments);
-        return $this;
-    }
-    /**
      * handle payment settlement status event
      * request.
      * @param  Varien_Event_Observer $observer
