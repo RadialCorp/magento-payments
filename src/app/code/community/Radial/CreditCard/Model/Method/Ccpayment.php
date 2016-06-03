@@ -24,6 +24,7 @@ use Psr\Log\NullLogger;
 
 class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method_Cc
 {
+    const CREDITCARD_TIMEOUT_MESSAGE = 'Radial_CreditCard_Timeout';
     const CREDITCARD_DENIED_MESSAGE = 'Radial_CreditCard_Denied';
     const CREDITCARD_FAILED_MESSAGE = 'Radial_CreditCard_Failed';
     const SETTLEMENT_FAILED_MESSAGE = 'Radial_CreditCard_Settlement_Failed';
@@ -491,6 +492,19 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * Fail the auth request by setting a checkout step to return to and throwing
      * an exception.
      * @see self::_setCheckoutStep for available checkout steps to return to
+     * @param Varien_Object $payment
+     * @throws Mage_Core_Exception
+     */
+    protected function _confirmFundsRequestTimeout()
+    {
+        $errorMessage = $this->_helper->__(self::CREDITCARD_TIMEOUT_MESSAGE);
+        throw Mage::exception('Radial_CreditCard', $errorMessage);
+    }
+
+    /**
+     * Fail the auth request by setting a checkout step to return to and throwing
+     * an exception.
+     * @see self::_setCheckoutStep for available checkout steps to return to
      * @param string $errorMessage
      * @param string $returnStep Step of checkout to send the user to
      * @throws Mage_Core_Exception
@@ -675,6 +689,11 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         // if auth was a complete success, accept the response and move on
         if ($response->isSuccess()) {
+            return $this;
+        }
+        // if auth was a complete success, accept the response and move on
+        if ($response->isTimeout()) {
+            $this->_confirmFundsRequestTimeout();
             return $this;
         }
         // auth failed for some other reason, possibly declined, making it unacceptable

@@ -1,3 +1,4 @@
+"RADIAL_PAYPAL_CONFIRM_FUNDS_TIMEOUT", "The response from the gateway timed out."
 "RADIAL_PAYPAL_WILL_REDIRECT_MESSAGE","You will be redirected to the PayPal website."
 "RADIAL_PAYPAL_API_FAILED","Unable to perform PayPal transaction. Please try again."
 "RADIAL_PAYPAL_SETTLEMENT_FAILED", "The gateway did not respond to the settlement request, this request will be retried."

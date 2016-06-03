@@ -31,6 +31,7 @@ class Radial_Paypal_Model_Express_Api
 {
     const RADIAL_PAYPAL_API_FAILED = 'RADIAL_PAYPAL_API_FAILED';
     const RADIAL_PAYPAL_DENIED_MESSAGE = 'RADIAL_PAYPAL_DENIED_MESSAGE';
+    const RADIAL_PAYPAL_CONFIRM_FUNDS_TIMEOUT = 'RADIAL_PAYPAL_CONFIRM_FUNDS_TIMEOUT';
 
     const PAYPAL_SETEXPRESS_REQUEST_ID_PREFIX = 'PSE-';
     const PAYPAL_GETEXPRESS_REQUEST_ID_PREFIX = 'PSG-';
@@ -338,6 +339,12 @@ class Radial_Paypal_Model_Express_Api
         if ($response->isSuccess()) {
             return $this;
         }
+        // if auth was a complete success, accept the response and move on
+        if ($response->isTimeout()) {
+            $errorMessage = $this->helper->__(self::RADIAL_PAYPAL_CONFIRM_FUNDS_TIMEOUT);
+            $this->_failPaymentRequest($errorMessage);
+            return $this;
+        }
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
         $errorMessage = $this->helper->__(self::RADIAL_PAYPAL_DENIED_MESSAGE);
@@ -354,7 +361,7 @@ class Radial_Paypal_Model_Express_Api
      */
     protected function _failPaymentRequest($errorMessage)
     {
-        throw Mage::exception('Radial_CreditCard', $this->helper->__($errorMessage));
+        throw Mage::exception('Radial_PayPal', $this->helper->__($errorMessage));
     }
 
     /**
