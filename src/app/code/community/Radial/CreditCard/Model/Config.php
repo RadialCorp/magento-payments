@@ -23,6 +23,5 @@ class Radial_CreditCard_Model_Config extends Radial_Core_Model_Config_Abstract
         'api_service' => 'radial_creditcard/api/service',
         'encryption_key' => 'payment/radial_creditcard/encryption_key',
         'tender_types' => 'radial_creditcard/tender_types',
-        'use_client_side_encryption' => 'payment/radial_creditcard/use_client_side_encryption',
     );
 }

@@ -112,9 +112,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
 
     /** @var EbayEnterprise_MageLog_Helper_Context */
     protected $_context;
-
-    /** @var bool */
-    protected $_isUsingClientSideEncryption;
+    
     /**
      * `__construct` overridden in Mage_Payment_Model_Method_Abstract as a no-op.
      * Override __construct here as the usual protected `_construct` is not called.
@@ -146,7 +144,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->_nullCoalesce($initParams, 'context', Mage::helper('ebayenterprise_magelog/context')),
             $this->_nullCoalesce($initParams, 'api_logger', new NullLogger)
         );
-        $this->_isUsingClientSideEncryption = $this->_helper->getConfigModel()->useClientSideEncryptionFlag;
     }
     /**
      * Type hinting for self::__construct $initParams
@@ -218,9 +215,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         if (is_array($data)) {
             $data = Mage::getModel('Varien_Object', $data);
         }
-        if ($this->_isUsingClientSideEncryption) {
-            $this->getInfoInstance()->setCcLast4($data->getCcLast4());
-        }
+        $this->getInfoInstance()->setCcLast4($data->getCcLast4());
         return $this;
     }
     /**
@@ -231,11 +226,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         // card type can and should always be validated as data is not encrypted
         $this->_validateCardType();
-        if ($this->_isUsingClientSideEncryption) {
-            return $this->_validateWithEncryptedCardData();
-        } else {
-            return parent::validate();
-        }
+        return $this->_validateWithEncryptedCardData();
     }
     /**
      * Validate what data can still be validated.
@@ -337,7 +328,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $billingAddress = $order->getBillingAddress();
         $shippingAddress = $order->getIsVirtual() ? $billingAddress : $order->getShippingAddress();
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setIsEncrypted(true)
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setOrderId($order->getIncrementId())
             ->setPanIsToken(false)
@@ -716,7 +707,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setIsEncrypted(true)
             ->setPanIsToken(true)
             ->setAmount((float)$amount)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
@@ -811,7 +802,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $order = $invoice->getOrder();
         $payment = $order->getPayment();
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setIsEncrypted(true)
             ->setPanIsToken(true)
             ->setAmount((float)$invoice->getBaseGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
@@ -841,7 +832,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $order = $payment->getOrder();
         $amountAuthorized = $order->getBaseGrandTotal();
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setIsEncrypted(true)
             ->setPanIsToken(true)
             ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
@@ -997,7 +988,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $order = $payment->getOrder();
         $invoice = $creditmemo->getInvoice();
         $request
-            ->setIsEncrypted($this->_isUsingClientSideEncryption)
+            ->setIsEncrypted(true)
             ->setPanIsToken(true)
             ->setAmount((float)$creditmemo->getBaseGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())

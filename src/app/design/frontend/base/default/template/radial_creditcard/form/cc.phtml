@@ -112,7 +112,7 @@ $_fields = $this->getFormFields();
 	</li>
 	<?php endif; ?>
 </ul>
-<?php if ($this->isUsingClientSideEncryption()): ?>
+
 <input id="<?php echo $_fields['last_four'] ?>" type="hidden" name="payment[cc_last4]" />
 <script>
 (function () {
@@ -167,4 +167,3 @@ $$('input[data-encrypted-name]').each(makeEncryptedField);
 $('<?php echo $_fields["number"] ?>').on('change', updateCardNumberLastFour);
 })();
 </script>
-<?php endif;

@@ -80,7 +80,6 @@ http://opensource.org/licenses/osl-3.0.php
                 <cctypes>AE,VI,MC,DI</cctypes>
                 <payment_action>authorize</payment_action>
                 <allowspecific>0</allowspecific>
-                <use_client_side_encryption>1</use_client_side_encryption>
             </radial_creditcard>
         </payment>
         <radial_creditcard>

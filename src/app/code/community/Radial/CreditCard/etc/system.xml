@@ -66,16 +66,6 @@ http://opensource.org/licenses/osl-3.0.php
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </sort_order>
-                        <use_client_side_encryption>
-                            <label>Use Client Side Encryption</label>
-                            <comment>Enabling client-side encryption removes Magento from PCI DSS. Do not disable unless this Magento store is fully compliant with PCI DSS.</comment>
-                            <frontend_type>select</frontend_type>
-                            <sort_order>6</sort_order>
-                            <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>0</show_in_website>
-                            <show_in_store>0</show_in_store>
-                        </use_client_side_encryption>
                         <encryption_key>
                             <label>Encryption Key</label>
                             <frontend_type>text</frontend_type>

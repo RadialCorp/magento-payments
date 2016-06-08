@@ -35,14 +35,6 @@ class Radial_CreditCard_Block_Form_Cc extends Mage_Payment_Block_Form_Cc
         return $this->_config->encryptionKey;
     }
     /**
-     * Get the config flag for if client side encryption is enabled.
-     * @return bool
-     */
-    public function isUsingClientSideEncryption()
-    {
-        return $this->_config->useClientSideEncryptionFlag;
-    }
-    /**
      * Get the names of form fields to use in the CC form.
      * @return array
      */

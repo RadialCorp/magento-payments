@@ -45,9 +45,7 @@ $_fields = $this->getFormFields();
 			<?php else: ?>
 				<input type="hidden" id="<?php echo $_fields['number'] ?>" data-encrypted-name="payment[cc_number]" value="<?php echo $this->getInfoData('cc_number'); ?>" data-client-encrypted="true" />*********<?php echo $this->getInfoData('cc_last4'); ?>
 			<?php endif; ?>
-			<?php if ($this->isUsingClientSideEncryption()): ?>
-				<input id="<?php echo $_fields['last_four'] ?>" type="hidden" name="payment[cc_last4]" value="<?php echo $this->getInfoData('cc_last4'); ?>" />
-			<?php endif; ?>
+			<input id="<?php echo $_fields['last_four'] ?>" type="hidden" name="payment[cc_last4]" value="<?php echo $this->getInfoData('cc_last4'); ?>" />
 		</div>
 	</li>
 	<li id="<?php echo $_code ?>_cc_type_exp_div">
@@ -123,7 +121,6 @@ $_fields = $this->getFormFields();
 	</li>
 	<?php endif; ?>
 </ul>
-<?php if ($this->isUsingClientSideEncryption()): ?>
 <script>
 (function () {
 
@@ -202,4 +199,3 @@ $$('input[data-encrypted-name]').each(makeEncryptedField);
 $('<?php echo $_fields["number"] ?>').on('change', updateCardNumberLastFour);
 })();
 </script>
-<?php endif;
