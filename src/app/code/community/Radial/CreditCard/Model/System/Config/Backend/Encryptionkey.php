@@ -20,6 +20,9 @@ class Radial_CreditCard_Model_System_Config_Backend_Encryptionkey extends Mage_C
      */
     protected function _beforeSave()
     {
+        if (!$this->getValue()) {
+            Mage::throwException(Mage::helper('core')->__('Encryption key can not be empty.'));
+        }
         $this->setValue(preg_replace('#\s+#', '', $this->getValue()));
     }
 }
