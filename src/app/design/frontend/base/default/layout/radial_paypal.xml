@@ -15,14 +15,14 @@ http://opensource.org/licenses/osl-3.0.php
 <layout version="1.4.0">
     <checkout_cart_index>
         <reference name="checkout.cart.top_methods">
-            <block type="radial_paypal/express_shortcut" name="checkout.cart.methods.radial_paypal_express.top" before="-" template="radial_paypal/express/shortcut.phtml">
+            <block type="radial_paypal/express_cartShortcut" name="checkout.cart.methods.radial_paypal_express.top" before="-" template="radial_paypal/express/shortcut.phtml">
                 <action method="setIsQuoteAllowed">
                     <value>1</value>
                 </action>
             </block>
         </reference>
         <reference name="checkout.cart.methods">
-            <block type="radial_paypal/express_shortcut" name="checkout.cart.methods.radial_paypal_express.bottom" before="-" template="radial_paypal/express/shortcut.phtml">
+            <block type="radial_paypal/express_cartShortcut" name="checkout.cart.methods.radial_paypal_express.bottom" before="-" template="radial_paypal/express/shortcut.phtml">
                 <action method="setIsQuoteAllowed">
                     <value>1</value>
                 </action>
@@ -173,10 +173,10 @@ http://opensource.org/licenses/osl-3.0.php
     </cms_index_index>
     <default>
         <reference name="topCart.extra_actions">
-            <block type="radial_paypal/express_shortcut" name="radial_paypal.partner.top_cart.shortcut" template="radial_paypal/express/shortcut.phtml"/>
+            <block type="radial_paypal/express_cartShortcut" name="radial_paypal.partner.top_cart.shortcut" template="radial_paypal/express/shortcut.phtml"/>
         </reference>
         <reference name="cart_sidebar.extra_actions">
-            <block type="radial_paypal/express_shortcut" name="radial_paypal.partner.cart_sidebar.shortcut" template="radial_paypal/express/shortcut.phtml"/>
+            <block type="radial_paypal/express_cartShortcut" name="radial_paypal.partner.cart_sidebar.shortcut" template="radial_paypal/express/shortcut.phtml"/>
         </reference>
     </default>
     <SHORTCUT_popup>

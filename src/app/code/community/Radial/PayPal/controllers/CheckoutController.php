@@ -103,6 +103,9 @@ class Radial_PayPal_CheckoutController extends Mage_Core_Controller_Front_Action
                     );
                 return;
             }
+            // Set return page if canceled.
+            Mage::getSingleton('customer/session')
+                ->setBeforeAuthUrl($this->_getRefererUrl());
 
             try {
                 $buttonKey = Radial_PayPal_Model_Express_Checkout::PAYMENT_INFO_BUTTON;
@@ -180,6 +183,10 @@ class Radial_PayPal_CheckoutController extends Mage_Core_Controller_Front_Action
                     $this->__('Express Checkout has been canceled.')
                 );
             }
+            $quote = $this->_getCheckoutSession()->getQuote();
+
+            $this->removeLastQuoteItem($quote);
+
         } catch (Mage_Core_Exception $e) {
             $this->_getCheckoutSession()->addError($e->getMessage());
         } catch (Exception $e) {
@@ -189,7 +196,28 @@ class Radial_PayPal_CheckoutController extends Mage_Core_Controller_Front_Action
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
         }
 
-        $this->_redirect('checkout/cart');
+        $beforeAuthUrl = Mage::getSingleton('customer/session')->getBeforeAuthUrl();
+
+        $this->getResponse()
+            ->setRedirect($beforeAuthUrl ?: Mage::getUrl('checkout/cart'));
+    }
+
+    /**
+     * Remove the last added quote item from the cart
+     * @param Mage_Sales_Model_Quote $quote
+     */
+    protected function removeLastQuoteItem(Mage_Sales_Model_Quote $quote)
+    {
+        $paymentButton = $quote->getPayment()
+            ->getMethodInstance()
+            ->getInfoInstance()
+            ->getAdditionalInformation(Radial_PayPal_Model_Express_Checkout::PAYMENT_INFO_BUTTON);
+        if ($paymentButton == Radial_PayPal_Model_Express_Checkout::BUTTON_PRODUCT) {
+            $lastItem = $quote->getItemsCollection()->getLastItem();
+            $quote->removeItem($lastItem->getId());
+            $quote->setItemsQty((float) $quote->getItemsQty() - $lastItem->getQty());
+            $quote->save();
+        }
     }
 
     /**

@@ -43,7 +43,8 @@ class Radial_PayPal_Block_Express_Shortcut extends Mage_Core_Block_Template
      * @var string
      */
     protected $_startAction =
-        'radial_paypal_express/checkout/start/button/1';
+        'radial_paypal_express/checkout/start/button/' .
+        Radial_PayPal_Model_Express_Checkout::BUTTON_PRODUCT;
     /**
      * Express checkout model factory name
      *

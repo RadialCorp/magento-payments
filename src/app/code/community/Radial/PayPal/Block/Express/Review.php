@@ -241,7 +241,7 @@ class Radial_PayPal_Block_Express_Review extends Mage_Core_Block_Template
                 && $this->_quote->getPayment()
                     ->getAdditionalInformation(
                         Radial_PayPal_Model_Express_Checkout::PAYMENT_INFO_BUTTON
-                    ) == 1;
+                    );
             // misc shipping parameters
             $this->setShippingMethodSubmitUrl(
                 $this->getUrl(

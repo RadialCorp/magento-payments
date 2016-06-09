@@ -49,6 +49,8 @@ class Radial_PayPal_Model_Express_Checkout
 
     /** @var string Flag from the request that indicates checkout was initiated outside normal checkout flow */
     const PAYMENT_INFO_BUTTON = 'button';
+    const BUTTON_PRODUCT = 1;
+    const BUTTON_CART = 2;
 
     /** @var Mage_Sales_Model_Quote */
     protected $_quote;
@@ -177,7 +179,7 @@ class Radial_PayPal_Model_Express_Checkout
             // mark the payment to indicate express checkout was initiated from
             // outside the normal checkout flow
             // (e.g. clicked paypal checkout button from product page)
-            $setExpressCheckoutReply[self::PAYMENT_INFO_BUTTON] = 1;
+            $setExpressCheckoutReply[self::PAYMENT_INFO_BUTTON] = (int) $button;
         }
         $this->_quote->getPayment()->importData($setExpressCheckoutReply);
         $this->_quote->getPayment()->save();
@@ -273,7 +275,7 @@ class Radial_PayPal_Model_Express_Checkout
         $portBillingFromShipping
             = $quote->getPayment()->getAdditionalInformation(
                 self::PAYMENT_INFO_BUTTON
-            ) == 1
+            )
             && !$quote->isVirtual();
         if ($portBillingFromShipping) {
             $billingAddress = clone $shippingAddress;
