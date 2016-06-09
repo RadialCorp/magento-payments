@@ -17,7 +17,6 @@ http://opensource.org/licenses/osl-3.0.php
         <reference name="head">
             <action method="addJs">
                 <script>radial_creditcard/braintree.js</script>
-                <params>integrity="YjI3YWM3OTkwNWMxODFkYzRiZjhlOTU2ODJhODE1YzZmMGJiYmNiYmQzNTg0Yjk5NjA5ZGNmNWJhZmFmYzJmMw"</params>
             </action>
         </reference>
     </checkout_onepage_index>
@@ -25,7 +24,6 @@ http://opensource.org/licenses/osl-3.0.php
         <reference name="head">
             <action method="addJs">
                 <script>radial_creditcard/braintree.js</script>
-                <params>integrity="YjI3YWM3OTkwNWMxODFkYzRiZjhlOTU2ODJhODE1YzZmMGJiYmNiYmQzNTg0Yjk5NjA5ZGNmNWJhZmFmYzJmMw"</params>
             </action>
         </reference>
     </checkout_multishipping>
