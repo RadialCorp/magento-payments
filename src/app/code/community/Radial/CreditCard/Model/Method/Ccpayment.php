@@ -707,7 +707,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
         $request
-            ->setIsEncrypted(true)
             ->setPanIsToken(true)
             ->setAmount((float)$amount)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
@@ -802,7 +801,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $order = $invoice->getOrder();
         $payment = $order->getPayment();
         $request
-            ->setIsEncrypted(true)
             ->setPanIsToken(true)
             ->setAmount((float)$invoice->getBaseGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
@@ -832,7 +830,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $order = $payment->getOrder();
         $amountAuthorized = $order->getBaseGrandTotal();
         $request
-            ->setIsEncrypted(true)
             ->setPanIsToken(true)
             ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
@@ -988,7 +985,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $order = $payment->getOrder();
         $invoice = $creditmemo->getInvoice();
         $request
-            ->setIsEncrypted(true)
             ->setPanIsToken(true)
             ->setAmount((float)$creditmemo->getBaseGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
