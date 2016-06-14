@@ -47,16 +47,19 @@ class Radial_Transactions_Model_Observer
         return isset($arr[$field]) ? $arr[$field] : $default;
     }
 
+    /**
+     * @param Varien_Event_Observer
+     */
     public function handleOrderCreatePaymentEvent(Varien_Event_Observer $observer)
     {
         $event = $observer->getEvent();
+        /** @var Mage_Sales_Model_Order_Payment $payment */
         $payment = $event->getPayment();
         $this->helper->preparePaymentForTransaction($payment);
         $payment->addTransaction(
             Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, 
             null, 
-            true, 
-            $this->helper->__("Authorize %s", $payment->getAmountAuthorized())
+            true
         );
     }
 
