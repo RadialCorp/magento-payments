@@ -142,7 +142,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->_nullCoalesce($initParams, 'payments_helper', Mage::helper('radial_payments')),
             $this->_nullCoalesce($initParams, 'logger', Mage::helper('ebayenterprise_magelog')),
             $this->_nullCoalesce($initParams, 'context', Mage::helper('ebayenterprise_magelog/context')),
-            $this->_nullCoalesce($initParams, 'api_logger', new NullLogger)
+            $this->_nullCoalesce($initParams, 'api_logger', Mage::helper('ebayenterprise_magelog'))
         );
     }
     /**
