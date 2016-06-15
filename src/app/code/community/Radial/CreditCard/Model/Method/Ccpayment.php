@@ -73,7 +73,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     /**
      * Can void transactions online?
      */
-    protected $_canVoid                 = true;
+    protected $_canVoid                 = false;
 
     /**
      * Can use this payment method in administration panel?
