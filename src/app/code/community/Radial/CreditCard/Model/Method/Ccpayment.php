@@ -633,6 +633,24 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     public function capture(Varien_Object $payment, $amount)
     {
+	$order = $payment->getOrder();
+        $notCapturable = 1;
+
+        if ($order->hasInvoices()) {
+          $oInvoiceCollection = $order->getInvoiceCollection();
+          foreach ($oInvoiceCollection as $oInvoice) {
+                if( $oInvoice->getRequestedCaptureCase() !== Mage_Sales_Model_Order_Invoice::NOT_CAPTURE )
+                {
+                        $notCapturable = 0;
+                }
+          }
+
+          if( $notCapturable )
+          {
+                return $this;
+          }
+        }
+
         if ($amount <= 0) {
             Mage::throwException($this->_helper->__('Invalid amount to capture.'));
         }
