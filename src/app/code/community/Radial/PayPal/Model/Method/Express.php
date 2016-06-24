@@ -227,6 +227,26 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         if (!$this->canCapture()) {
             Mage::throwException(Mage::helper('payment')->__('Capture action is not available.'));
         }
+
+	$order = $payment->getOrder();
+        $notCapturable = 1;
+
+        if ($order->hasInvoices()) {
+          $oInvoiceCollection = $order->getInvoiceCollection();
+          foreach ($oInvoiceCollection as $oInvoice) {
+                if( $oInvoice->getRequestedCaptureCase() != Mage_Sales_Model_Order_Invoice::NOT_CAPTURE && $oInvoice->getState() != Mage_Sales_Model_Order_Invoice::STATE_CANCELED && $oInvoice->getState() != Mage_Sales_Model_Order_Invoice::STATE_PAID )
+                {
+                        $notCapturable = 0;
+                        break;
+                }
+          }
+
+          if( $notCapturable )
+          {
+                return $this;
+          }
+        }
+
         // confirm funds
         $this->_api->doConfirm($payment, $amount);
         return $this;

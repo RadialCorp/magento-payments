@@ -639,8 +639,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         if ($order->hasInvoices()) {
           $oInvoiceCollection = $order->getInvoiceCollection();
           foreach ($oInvoiceCollection as $oInvoice) {
-                if( $oInvoice->getRequestedCaptureCase() !== Mage_Sales_Model_Order_Invoice::NOT_CAPTURE )
-                {
+                if( $oInvoice->getRequestedCaptureCase() != Mage_Sales_Model_Order_Invoice::NOT_CAPTURE && $oInvoice->getState() != Mage_Sales_Model_Order_Invoice::STATE_CANCELED && $oInvoice->getState() != Mage_Sales_Model_Order_Invoice::STATE_PAID )
+		{
                         $notCapturable = 0;
                 }
           }
