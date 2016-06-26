@@ -20,24 +20,16 @@
 $installer = $this;
 $installer->startSetup();
 
-$this->addAttribute('sales_flat_invoice', 'delivery_status', array(
-    'label' => 'Delivery Status',
-    'type' => 'integer',
-    'input' => 'select',
-    'visible' => true,
-    'required' => false,
-    'position' => 1,
-    'visible_on_front'  => false,
-));
+$connection->addColumn(
+    $this->getTable('sales/invoice'),
+    'delivery_status',
+    "INTEGER DEFAULT NULL"
+);
 
-$this->addAttribute('sales_flat_creditmemo', 'delivery_status', array(
-    'label' => 'Delivery Status',
-    'type' => 'integer',
-    'input' => 'select',
-    'visible' => true,
-    'required' => false,
-    'position' => 1,
-    'visible_on_front'  => false,
-));
+$connection->addColumn(
+    $this->getTable('sales/creditmemo'),
+    'delivery_status',
+    "INTEGER DEFAULT NULL"
+);
 
 $installer->endSetup();
