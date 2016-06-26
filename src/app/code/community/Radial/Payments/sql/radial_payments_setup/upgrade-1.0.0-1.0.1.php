@@ -19,6 +19,7 @@
  */
 $installer = $this;
 $installer->startSetup();
+$connection = $installer->getConnection();
 
 $connection->addColumn(
     $this->getTable('sales/invoice'),
