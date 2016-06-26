@@ -10,6 +10,10 @@
     { "name": "Ryan Tulino", "email": "rtulino@radial.com", "role": "Developer" }
   ],
   "type": "magento-module",
+  "repositories": [
+    { "type": "vcs", "url": "https://github.com/rkrule/magento-core.git" },
+    { "type": "composer", "url": "https://packages.firegento.com/" }
+  ],
   "require": {
     "php": ">=5.4.0",
     "radial/magento-core": "dev-master"
@@ -27,9 +31,5 @@
     "phpunit/phpunit-story": ">=1",
     "sebastian/phpcpd": ">=2.0",
     "squizlabs/php_codesniffer": ">=1.5"
-  },
-  "repositories": [
-    { "type": "vcs", "url": "https://github.com/rkrule/magento-core.git" },
-    { "type": "composer", "url": "https://packages.firegento.com/" }
-  ]
+  }
 }
