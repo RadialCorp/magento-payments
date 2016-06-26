@@ -17,7 +17,7 @@ class Radial_Payments_Model_Adminhtml_System_Config_Backend_Nummaxretry extends 
 {
     public function _afterLoad()
     {
-	$maxretries = Mage::helper('radial_core/payments/maxretries');
+	$maxretries = Mage::getStoreConfig('radial_core/payments/maxretries');
 
 	$pendingCreditMemoSize = Mage::getModel('sales/order_creditmemo')->getCollection()
         		->addFieldToFilter('state', Mage_Sales_Model_Order_Creditmemo::STATE_OPEN)
