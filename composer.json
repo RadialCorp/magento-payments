@@ -29,7 +29,7 @@
     "squizlabs/php_codesniffer": ">=1.5"
   },
   "repositories": [
-    { "type": "composer", "url": "https://packages.firegento.com/" },
-    { "type": "vcs", "url": "https://github.com/rkrule/magento-core.git" }
+    { "type": "vcs", "url": "https://github.com/rkrule/magento-core.git" },
+    { "type": "composer", "url": "https://packages.firegento.com/" }
   ]
 }
