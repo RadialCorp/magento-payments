@@ -15,8 +15,7 @@
     { "type": "composer", "url": "https://packages.firegento.com/" }
   ],
   "require": {
-    "php": ">=5.4.0",
-    "radial/magento-core": "dev-master"
+    "php": ">=5.4.0"
   },
   "require-dev": {
     "ecomdev/ecomdev_phpunit": ">=0.3",
