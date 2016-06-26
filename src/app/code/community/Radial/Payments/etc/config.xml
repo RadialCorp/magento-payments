@@ -49,6 +49,14 @@ http://opensource.org/licenses/osl-3.0.php
                 </observers>
             </radial_amqp_message_settlement_status>
         </events>
+	<resources>
+            <radial_payments_setup>
+                <setup>
+                    <module>Radial_Payments</module>
+                    <class>Mage_Sales_Model_Resource_Setup</class>
+                </setup>
+            </radial_payments_setup>
+        </resources>
     </global>
     <admin>
         <routers>
@@ -69,4 +77,11 @@ http://opensource.org/licenses/osl-3.0.php
             </radial_payments_retry_settlements>
         </jobs>
     </crontab>
+    <default>
+	<radial_core>
+                <payments>
+                        <maxretries>3</maxretries>
+                </payments>
+        </radial_core>
+    </default>
 </config>

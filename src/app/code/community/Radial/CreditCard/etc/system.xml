@@ -14,7 +14,7 @@ http://opensource.org/licenses/osl-3.0.php
 -->
 <config>
     <sections>
-        <payment>
+	<payment>
             <groups>
                 <radial_creditcard translate="label comment" module="radial_creditcard">
                     <label>Radial Credit Card</label>
