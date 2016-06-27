@@ -15,7 +15,7 @@ http://opensource.org/licenses/osl-3.0.php
 <config>
     <modules>
         <Radial_Payments>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </Radial_Payments>
     </modules>
     <global>
@@ -29,6 +29,11 @@ http://opensource.org/licenses/osl-3.0.php
                 <class>Radial_Payments_Model</class>
             </radial_payments>
         </models>
+	<blocks>
+            <radial_payments>
+                <class>Radial_Payments_Block</class>
+            </radial_payments>
+        </blocks>
         <events>
             <core_block_abstract_to_html_before>
                 <observers>
@@ -49,6 +54,14 @@ http://opensource.org/licenses/osl-3.0.php
                 </observers>
             </radial_amqp_message_settlement_status>
         </events>
+	<resources>
+            <radial_payments_setup>
+                <setup>
+                    <module>Radial_Payments</module>
+                    <class>Mage_Sales_Model_Resource_Setup</class>
+                </setup>
+            </radial_payments_setup>
+        </resources>
     </global>
     <admin>
         <routers>
@@ -69,4 +82,11 @@ http://opensource.org/licenses/osl-3.0.php
             </radial_payments_retry_settlements>
         </jobs>
     </crontab>
+    <default>
+	<radial_core>
+                <payments>
+                        <maxretries>3</maxretries>
+                </payments>
+        </radial_core>
+    </default>
 </config>

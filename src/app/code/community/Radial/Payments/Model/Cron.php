@@ -29,13 +29,29 @@ class Radial_Payments_Model_Cron
      */
     protected function retryCreditmemos()
     {
-        $creditmemoCollection = $this->getPendingCreditmemoCollection();
-        foreach ($creditmemoCollection as $creditmemo) {
-            $order = $creditmemo->getOrder();
-            $payment = $order->getPayment();
-            $payment->getMethodInstance()->processCreditmemo($creditmemo, $payment);
-            $this->saveSettlementDocument($creditmemo);
-        }
+	$creditmemoCollection = $this->getPendingCreditmemoCollection()->setPageSize(100);
+	$pages = $creditmemoCollection->getLastPageNumber();
+        $currentPage = 1;
+	$maxretries = Mage::getStoreConfig('radial_core/payments/maxretries');
+
+	do
+	{
+		$creditmemoCollection->setCurPage($currentPage);
+                $creditmemoCollection->load();
+
+        	foreach ($creditmemoCollection as $creditmemo) {
+		    if( $creditmemo->getDeliveryStatus() < $maxretries )
+		    {
+        	    	$order = $creditmemo->getOrder();
+        	    	$payment = $order->getPayment();
+        	    	$payment->getMethodInstance()->processCreditmemo($creditmemo, $payment);
+        	    	$this->saveSettlementDocument($creditmemo);
+		    }
+        	}
+
+		$currentPage++;
+                $creditmemoCollection->clear();
+	} while ($currentPage <= $pages);
     }
 
     /**
@@ -43,13 +59,29 @@ class Radial_Payments_Model_Cron
      */
     protected function retryInvoices()
     {
-        $invoiceCollection = $this->getPendingInvoiceCollection();
-        foreach ($invoiceCollection as $invoice) {
-            $order = $invoice->getOrder();
-            $payment = $order->getPayment();
-            $payment->getMethodInstance()->processInvoice($invoice, $payment);
-            $this->saveSettlementDocument($invoice);
-        }
+        $invoiceCollection = $this->getPendingInvoiceCollection()->setPageSize(100);
+	$pages = $invoiceCollection->getLastPageNumber();
+        $currentPage = 1;
+	$maxretries = Mage::getStoreConfig('radial_core/payments/maxretries');
+
+	do
+	{
+		$invoiceCollection->setCurPage($currentPage);
+		$invoiceCollection->load();
+
+        	foreach ($invoiceCollection as $invoice) {
+		    if( $invoice->getDeliveryStatus() < $maxretries )
+		    {
+        	    	$order = $invoice->getOrder();
+        	    	$payment = $order->getPayment();
+        	    	$payment->getMethodInstance()->processInvoice($invoice, $payment);
+        	    	$this->saveSettlementDocument($invoice);
+		    }
+        	}
+
+		$currentPage++;
+		$invoiceCollection->clear();
+	} while ($currentPage <= $pages);
     }
 
     /**
@@ -84,9 +116,9 @@ class Radial_Payments_Model_Cron
     {
         $document->getOrder()->setIsInProcess(true);
         $transactionSave = Mage::getModel('core/resource_transaction')
-            ->addObject($document)
-            ->addObject($document->getOrder())
-            ->save();
+         	->addObject($document)
+            	->addObject($document->getOrder())
+                ->save();
         return $this;
     }
 }
