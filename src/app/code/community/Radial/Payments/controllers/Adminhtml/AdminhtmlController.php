@@ -1,6 +1,6 @@
 <?php
  
-class Radial_Eb2cFraud_Adminhtml_AdminhtmlController extends Mage_Adminhtml_Controller_Action
+class Radial_Payments_Adminhtml_AdminhtmlController extends Mage_Adminhtml_Controller_Action
 {
     public function indexAction()
     {
@@ -23,7 +23,7 @@ class Radial_Eb2cFraud_Adminhtml_AdminhtmlController extends Mage_Adminhtml_Cont
                         ->addFieldToFilter('state', Mage_Sales_Model_Order_Creditmemo::STATE_OPEN)
 			->addFieldToFilter('delivery_status', $maxretries);
 
-        $pages = pendingCreditMemo->getLastPageNumber();
+        $pages = $pendingCreditMemo->getLastPageNumber();
         $currentPage = 1;
 
         do
@@ -77,7 +77,7 @@ class Radial_Eb2cFraud_Adminhtml_AdminhtmlController extends Mage_Adminhtml_Cont
 	 $pendingCreditMemo = Mage::getModel('sales/order_creditmemo')->getCollection()->setPageSize(100)
                         ->addFieldToFilter('state', Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
 
-        $pages = pendingCreditMemo->getLastPageNumber();
+        $pages = $pendingCreditMemo->getLastPageNumber();
         $currentPage = 1;
 
         do

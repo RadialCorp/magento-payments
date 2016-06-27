@@ -72,6 +72,13 @@ http://opensource.org/licenses/osl-3.0.php
                     </modules>
                 </args>
             </adminhtml>
+	    <admin>
+                <use>admin</use>
+                <args>
+                    <frontName>radial_payments</frontName>
+                    <module>Radial_Payments_Adminhtml</module>
+                </args>
+            </admin>
         </routers>
     </admin>
     <crontab>
