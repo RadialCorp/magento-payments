@@ -50,4 +50,15 @@ class Radial_Payments_Model_Observer
             ['payload' => $observer->getEvent()->getPayload()]
         )->process();
     }
+
+    public function processOrderCancel(Varien_Event_Observer $observer )
+    {
+	$order = $observer->getEvent()->getOrder();
+
+	if( $order->getState() === Mage_Sales_Model_Order::STATE_CANCELED )
+	{
+		$payment = $order->getPayment();
+        	$payment->getMethodInstance()->void();
+    	}
+    }
 }
