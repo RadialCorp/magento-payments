@@ -65,6 +65,16 @@ http://opensource.org/licenses/osl-3.0.php
                             		<show_in_website>1</show_in_website>
                             		<show_in_store>0</show_in_store>
                         	    </purge_retryqueue>
+				    <responsetimeout translate="label">
+		                            <label>Payments Response Timeout</label>
+        		                    <comment>Time in milliseconds</comment>
+        		                    <sort_order>10</sort_order>
+                			    <frontend_type>text</frontend_type>
+                            		    <validate>validate-number</validate>
+                            		    <show_in_default>1</show_in_default>
+                            		    <show_in_website>1</show_in_website>
+                            		    <show_in_store>0</show_in_store>
+                        	    </responsetimeout>
                             </fields>
                         </payments>
                 </groups>
