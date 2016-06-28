@@ -537,6 +537,24 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
         );
     }
+
+    /**
+     * Get the API SDK for the payment settlement request.
+     * @param Mage_Sales_Model_Order_Creditmemo
+     * @param Mage_Sales_Model_Payment
+     * @return Api\IBidirectionalApi
+     * @throws Mage_Core_Exception
+     */
+    protected function _getCreditmemoApi(Mage_Sales_Model_Order_Creditmemo $creditmemo, Mage_Sales_Model_Order_Payment $payment)
+    {
+        $config = $this->_helper->getConfigModel();
+        return $this->_getApi(
+            $config->apiService,
+            $config->apiSettlement,
+            [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
+        );
+    }
+
     /**
      * Get the API SDK for the payment auth cancel request.
      * @param Varien_Object $payment
@@ -961,32 +979,27 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $creditmemo->save();
         parent::processCreditmemo($creditmemo, $payment);
         try {
-            $invoice = $creditmemo->getInvoice();
-
-	    if( $invoice )
-	    {
-            	$api = $this->_getSettlementApi($invoice);
-            	$this->_prepareCreditRequest($api, $creditmemo, $payment);
-            	Mage::dispatchEvent('radial_creditcard_settlement_credit_request_send_before', [
-            	    'payload' => $api->getRequestBody(),
-            	    'creditmemo' => $creditmemo,
-            	    'payment' => $payment,
-            	]);
-            	// Log the request instead of expecting the SDK to have logged it.
-            	// Allows the data to be properly scrubbed of any PII or other sensitive
-            	// data prior to writing the log files.
-            	$logMessage = 'Sending credit card settlement credit request.';
-            	$cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
-            	$this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
-            	$this->_sendRequest($api);
-            	// Log the response instead of expecting the SDK to have logged it.
-            	// Allows the data to be properly scrubbed of any PII or other sensitive
-            	// data prior to writing the log files.
-            	$logMessage = 'Received credit card settlement credit response.';
-            	$cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
-            	$this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
-            	$this->_handleCreditResponse($api, $creditmemo, $payment);
-	    }
+            $api = $this->_getCreditmemoApi($creditmemo);
+            $this->_prepareCreditRequest($api, $creditmemo, $payment);
+            Mage::dispatchEvent('radial_creditcard_settlement_credit_request_send_before', [
+                'payload' => $api->getRequestBody(),
+                'creditmemo' => $creditmemo,
+                'payment' => $payment,
+            ]);
+            // Log the request instead of expecting the SDK to have logged it.
+            // Allows the data to be properly scrubbed of any PII or other sensitive
+            // data prior to writing the log files.
+            $logMessage = 'Sending credit card settlement credit request.';
+            $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
+            $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+            $this->_sendRequest($api);
+            // Log the response instead of expecting the SDK to have logged it.
+            // Allows the data to be properly scrubbed of any PII or other sensitive
+            // data prior to writing the log files.
+            $logMessage = 'Received credit card settlement credit response.';
+            $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
+            $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
+            $this->_handleCreditResponse($api, $creditmemo, $payment);
         } catch (Exception $e) {
        	    // settlement must be allowed to fail
        	    // set creditmemo status as OPEN to trigger a retry and notify admin
@@ -1018,7 +1031,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $request = $api->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
-        $invoice = $creditmemo->getInvoice();
         $request
             ->setPanIsToken(true)
             ->setAmount((float)$creditmemo->getBaseGrandTotal())
@@ -1029,7 +1041,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_REFUND)
             ->setFinalDebit(0)
-            ->setInvoiceId($invoice->getIncrementId())
+            ->setInvoiceId($creditmemo->getIncrementId())
             ->setOrderId($order->getIncrementId());
         return $this;
     }
