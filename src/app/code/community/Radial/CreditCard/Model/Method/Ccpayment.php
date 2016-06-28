@@ -979,7 +979,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $creditmemo->save();
         parent::processCreditmemo($creditmemo, $payment);
         try {
-            $api = $this->_getCreditmemoApi($creditmemo);
+            $api = $this->_getCreditmemoApi($creditmemo, $payment);
             $this->_prepareCreditRequest($api, $creditmemo, $payment);
             Mage::dispatchEvent('radial_creditcard_settlement_credit_request_send_before', [
                 'payload' => $api->getRequestBody(),
@@ -1005,7 +1005,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
        	    // set creditmemo status as OPEN to trigger a retry and notify admin
        	    $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
 	
-	    $retry = $creditmemo->getDeliveryStatus()
+	    $retry = $creditmemo->getDeliveryStatus();
       	    $retryN = $retry + 1;
             $creditmemo->setDeliveryStatus($retryN);
             $creditmemo->save();
