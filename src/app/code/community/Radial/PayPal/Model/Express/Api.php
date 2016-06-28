@@ -227,6 +227,7 @@ class Radial_Paypal_Model_Express_Api
     protected function _handleCaptureResponse(Api\IBidirectionalApi $sdk, Mage_Sales_Model_Order_Invoice $invoice)
     {
         $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_PAID);
+	$invoice->pay();
         return $this;
     }
     /**

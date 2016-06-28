@@ -870,6 +870,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected function _handleDebitResponse(Api\IBidirectionalApi $api, Mage_Sales_Model_Order_Invoice $invoice)
     {
         $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_PAID);
+	$invoice->pay();
         return $this;
     }
     /**
