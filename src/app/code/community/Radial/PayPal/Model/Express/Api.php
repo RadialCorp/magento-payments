@@ -156,9 +156,6 @@ class Radial_Paypal_Model_Express_Api
     
     public function doRefund($creditmemo, $payment)
     {
-        if (!$payment->getParentTransactionId()) {
-            Mage::throwException($this->helper->__('Invalid transaction ID.'));
-        }
         $sdk = $this->getSdk(
             $this->config->apiOperationDoSettlement,
             [static::TENDER_TYPE_PAYPAL]
@@ -295,7 +292,6 @@ class Radial_Paypal_Model_Express_Api
         $request = $sdk->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
-        $invoice = $creditmemo->getInvoice();
         $request
             ->setAmount((float)$creditmemo->getGrandTotal())
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
@@ -304,7 +300,7 @@ class Radial_Paypal_Model_Express_Api
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_REFUND)
             ->setFinalDebit(0)
-            ->setInvoiceId($invoice->getIncrementId())
+            ->setInvoiceId($creditmemo->getIncrementId())
             ->setOrderId($order->getIncrementId());
         return $this;
     }
