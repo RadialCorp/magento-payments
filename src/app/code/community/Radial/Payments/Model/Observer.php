@@ -50,4 +50,10 @@ class Radial_Payments_Model_Observer
             ['payload' => $observer->getEvent()->getPayload()]
         )->process();
     }
+
+    public function processOrderCancel(Varien_Event_Observer $observer)
+    {
+	$payment = $observer->getEvent()->getPayment();
+	$payment->getMethodInstance()->cancel($payment);
+    }
 }
