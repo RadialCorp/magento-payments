@@ -112,6 +112,6 @@ http://opensource.org/licenses/osl-3.0.php
 			<paymentavscsc_error>Please Correct Billing Address & Card Security Code</paymentavscsc_error>
 			<paymentcsc_error>Please Correct Card Security Code</paymentcsc_error>
 		</payments>
-	</radial_payments>
+	</radial_core>
     </default>
 </config>

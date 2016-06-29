@@ -75,7 +75,7 @@ http://opensource.org/licenses/osl-3.0.php
                             		    <show_in_website>1</show_in_website>
                             		    <show_in_store>0</show_in_store>
                         	    </responsetimeout>
-				      <paymentavs translate="label">
+				    <paymentavs translate="label">
                                         <label>Pass After AVS Response</label>
                                         <comment>Consult Radial For Help with Tender AVS Validations</comment>
                                         <sort_order>9</sort_order>
