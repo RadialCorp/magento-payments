@@ -53,6 +53,15 @@ http://opensource.org/licenses/osl-3.0.php
                     </radial_creditcard_payments_settlements_status_observer>
                 </observers>
             </radial_amqp_message_settlement_status>
+	    <sales_order_payment_cancel>
+		<observers>
+			<radial_payments_cancel>
+			    <type>model</type>
+			    <class>radial_payments/observer</class>
+			    <method>processOrderCancel</method>
+			</radial_payments_cancel>
+		</observers>
+	    </sales_order_payment_cancel>
         </events>
 	<resources>
             <radial_payments_setup>
