@@ -109,7 +109,7 @@ http://opensource.org/licenses/osl-3.0.php
                 	<paymentdeclf>0</paymentdeclf>
                 	<paymentavs_error>Please Correct Billing Address</paymentavs_error>
                 	<paymentavs>0</paymentavs>
-                	<paymentavscsc_error>Please Correct Billing Address & Card Security Code</paymentavscsc_error>
+                	<paymentavscsc_error>Please Correct Billing Address &amp; Card Security Code</paymentavscsc_error>
                 	<paymentcsc_error>Please Correct Card Security Code</paymentcsc_error>
                 </payments>
         </radial_core>
