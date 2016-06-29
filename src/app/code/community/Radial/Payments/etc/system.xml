@@ -65,16 +65,76 @@ http://opensource.org/licenses/osl-3.0.php
                             		<show_in_website>1</show_in_website>
                             		<show_in_store>0</show_in_store>
                         	    </purge_retryqueue>
-				    <responsetimeout translate="label">
-		                            <label>Payments Response Timeout</label>
-        		                    <comment>Time in milliseconds</comment>
-        		                    <sort_order>10</sort_order>
-                			    <frontend_type>text</frontend_type>
-                            		    <validate>validate-number</validate>
-                            		    <show_in_default>1</show_in_default>
-                            		    <show_in_website>1</show_in_website>
-                            		    <show_in_store>0</show_in_store>
-                        	    </responsetimeout>
+				    <paymentavs translate="label">
+                                        <label>Pass After AVS Response</label>
+                                        <comment>Consult Radial For Help with Tender AVS Validations</comment>
+                                        <sort_order>9</sort_order>
+                                        <frontend_type>text</frontend_type>
+                                        <validate>validate-number</validate>
+                                        <show_in_default>1</show_in_default>
+                                        <show_in_website>1</show_in_website>
+                                        <show_in_store>0</show_in_store>
+                                    </paymentavs>
+                                    <paymentavs_error translate="label">
+                                        <label>AVS Failure Response Display</label>
+                                        <sort_order>10</sort_order>
+                                        <frontend_type>text</frontend_type>
+                                        <show_in_default>1</show_in_default>
+                                        <show_in_website>1</show_in_website>
+                                        <show_in_store>0</show_in_store>
+                                    </paymentavs_error>
+				    <paymentavscsc_error translate="label">
+                                        <label>AVSCSC Failure Response Display</label>
+                                        <sort_order>11</sort_order>
+                                        <frontend_type>text</frontend_type>
+                                        <show_in_default>1</show_in_default>
+                                        <show_in_website>1</show_in_website>
+                                        <show_in_store>0</show_in_store>
+                                    </paymentavscsc_error>
+				    <paymentcsc_error translate="label">
+                                        <label>CSC Failure Response Display</label>
+                                        <sort_order>12</sort_order>
+                                        <frontend_type>text</frontend_type>
+                                        <show_in_default>1</show_in_default>
+                                        <show_in_website>1</show_in_website>
+                                        <show_in_store>0</show_in_store>
+                                    </paymentcsc_error>
+				    <paymentdeclf translate="label">
+                                        <label>Pass After DECLF Response</label>
+                                        <comment>Consult Radial For Help with Tender DECLF Validations</comment>
+                                        <sort_order>13</sort_order>
+                                        <frontend_type>text</frontend_type>
+                                        <validate>validate-number</validate>
+                                        <show_in_default>1</show_in_default>
+                                        <show_in_website>1</show_in_website>
+                                        <show_in_store>0</show_in_store>
+                                    </paymentdeclf>
+                                    <paymentdeclf_error translate="label">
+                                        <label>DECLF Failure Response Display</label>
+                                        <sort_order>14</sort_order>
+                                        <frontend_type>text</frontend_type>
+                                        <show_in_default>1</show_in_default>
+                                        <show_in_website>1</show_in_website>
+                                        <show_in_store>0</show_in_store>
+                                    </paymentdeclf_error>
+				    <paymentdecl translate="label">
+                                        <label>Pass After DECL Response</label>
+                                        <comment>Consult Radial For Help with Tender AVS Validation</comment>
+                                        <sort_order>15</sort_order>
+                                        <frontend_type>text</frontend_type>
+                                        <validate>validate-number</validate>
+                                        <show_in_default>1</show_in_default>
+                                        <show_in_website>1</show_in_website>
+                                        <show_in_store>0</show_in_store>
+                                    </paymentdecl>
+                                    <paymentdecl_error translate="label">
+                                        <label>DECL Failure Response Display</label>
+                                        <sort_order>16</sort_order>
+                                        <frontend_type>text</frontend_type>
+                                        <show_in_default>1</show_in_default>
+                                        <show_in_website>1</show_in_website>
+                                        <show_in_store>0</show_in_store>
+                                    </paymentdecl_error>
                             </fields>
                         </payments>
                 </groups>
