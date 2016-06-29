@@ -102,6 +102,7 @@ http://opensource.org/licenses/osl-3.0.php
 	<radial_core>
                 <payments>
                         <maxretries>3</maxretries>
+			<responsetimeout>20000</responsetimeout>
                 </payments>
         </radial_core>
     </default>

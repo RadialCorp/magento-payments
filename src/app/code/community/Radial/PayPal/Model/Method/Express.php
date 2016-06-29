@@ -182,6 +182,12 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
             // settlement must be allowed to fail
             // set creditmemo status as OPEN to trigger a retry and notify admin
             $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
+
+	    $retry = $creditmemo->getDeliveryStatus();
+            $retryN = $retry + 1;
+            $creditmemo->setDeliveryStatus($retryN);
+            $creditmemo->save();
+
             $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
             $this->getSession()->addNotice($errorMessage);
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
@@ -207,6 +213,12 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
             // settlement must be allowed to fail
             // set invoice status as OPEN to trigger a  retry and notify admin
             $invoice->setIsPaid(false);
+
+	    $retry = $invoice->getDeliveryStatus();
+            $retryN = $retry + 1;
+            $invoice->setDeliveryStatus($retryN);
+            $invoice->save();
+
             $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
             $this->getSession()->addNotice($errorMessage);
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
