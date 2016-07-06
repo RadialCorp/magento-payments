@@ -50,4 +50,44 @@ class Radial_Payments_Model_Observer
             ['payload' => $observer->getEvent()->getPayload()]
         )->process();
     }
+
+    public function processOrderCancel(Varien_Event_Observer $observer)
+    {
+        $payment = $observer->getEvent()->getPayment();
+        $order = $payment->getOrder();
+
+        $qtyOrdered = 0;
+        $qtyInvoiced = 0;
+        $orderItemArray = array();
+
+        foreach ($order->getAllItems() as $orderItem)
+        {
+                $qtyOrdered += $orderItem->getQtyOrdered();
+                $qtyInvoiced += $orderItem->getQtyInvoiced();
+
+                $orderItemArray[$orderItem->getId()] = 0;
+        }
+
+        if( (int)$qtyOrdered - (int)$qtyInvoiced !== 0 )
+        {
+                //MPTF-143 create a 0.00 invoice and process it, if the order has been partially invoiced and canceled.
+                /** @var Mage_Sales_Model_Service_Order $orderService */
+                $orderService = Mage::getModel('sales/service_order', $order);
+                $invoice = $orderService->prepareInvoice($orderItemArray);
+
+                $invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::NOT_CAPTURE);
+                $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_PAID);
+                $invoice->register();
+
+                $transactionSave = Mage::getModel('core/resource_transaction')
+                                ->addObject($invoice)
+                                ->addObject($invoice->getOrder());
+
+                $transactionSave->save();
+
+                $payment->getMethodInstance()->processInvoice($invoice, $payment);
+        }
+
+        $payment->getMethodInstance()->cancel($payment);
+    }
 }

@@ -35,6 +35,12 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     const INVALID_CARD_TYPE = 'Radial_CreditCard_Invalid_Card_Type';
     const SETTLEMENT_TYPE_CAPTURE = 'Debit';
     const SETTLEMENT_TYPE_REFUND = 'Credit';
+    const PAYMENT_RESPONSE_CODE_AVS = 'AVS';
+    const PAYMENT_RESPONSE_CODE_AVSCSC = 'AVSCSC';
+    const PAYMENT_RESPONSE_CODE_CSC = 'CSC';
+    const PAYMENT_RESPONSE_CODE_DECLF = 'DECLF';
+    const PAYMENT_RESPONSE_CODE_DECL = 'DECL';
+    const PAYMENT_RESPONSE_CODE_DECLR = 'DECLR';
     /**
      * Block type to use to render the payment method form.
      * @var string
@@ -365,11 +371,99 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     protected function _validateAuthResponse(Payload\Payment\ICreditCardAuthReply $response)
     {
-        // if auth was a complete success, accept the response and move on
-        if ($response->getIsAuthSuccessful()) {
+        // if auth was a complete success or declined fraud, accept the response and move on
+        if ($response->getIsAuthSuccessful() || $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLR ) {
+            Mage::getSingleton('core/session')->setAVSCount(0);
+            Mage::getSingleton('core/session')->setDECLFCount(0);
+            Mage::getSingleton('core/session')->setDECLCount(0);
             return $this;
         }
-        // if AVS correction is needed, redirect to billing address step
+
+        // AVS mismatch from Payment Response
+        $avsLimit = Mage::getStoreConfig('radial_core/payments/paymentavs');
+
+        if( $avsLimit )
+        {
+                if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_AVS )
+                {
+                        // Always fail if less than 0
+                        if( $avsLimit < 0 )
+                        {
+                                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavs_error'), 'billing');
+                        }
+
+                        $prevAVS = Mage::getSingleton('core/session')->getAVSCount();
+
+                        if( $prevAVS < $avsLimit )
+                        {
+                                $prevAVS++;
+                                Mage::getSingleton('core/session')->setAVSCount($prevAVS);
+                                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavs_error'), 'billing');
+                        } else {
+                                Mage::getSingleton('core/session')->setAVSCount(0);
+                                Mage::getSingleton('core/session')->setDECLFCount(0);
+                                Mage::getSingleton('core/session')->setDECLCount(0);
+                                return $this;
+                        }
+                }
+        }
+
+        if( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_AVSCSC )
+        {
+                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavscsc_error'), 'payment');
+        }
+
+        if( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_CSC )
+        {
+                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentcsc_error'), 'payment');
+        }
+
+        // DECL from Payment Response
+        $declLimit = Mage::getStoreConfig('radial_core/payments/paymentdecl');
+
+        if( $declLimit )
+        {
+                if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
+                {
+                        $prevDECL = Mage::getSingleton('core/session')->getDECLCount();
+
+                        if( $prevDECL < $declLimit )
+                        {
+                                $prevDECL++;
+                                Mage::getSingleton('core/session')->setDECLCount($prevDECL);
+                                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentdecl_error'), 'billing');
+                        } else {
+                                Mage::getSingleton('core/session')->setAVSCount(0);
+                                Mage::getSingleton('core/session')->setDECLFCount(0);
+                                Mage::getSingleton('core/session')->setDECLCount(0);
+                                return $this;
+                        }
+                }
+        }
+
+        // DECLF from Payment Response
+        $declfLimit = Mage::getStoreConfig('radial_core/payments/paymentdeclf');
+
+        if( $declfLimit )
+        {
+                if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
+                {
+                        $prevDECLF = Mage::getSingleton('core/session')->getDECLFCount();
+
+                        if( $prevDECLF < $declfLimit )
+                        {
+                                $prevDECLF++;
+                                Mage::getSingleton('core/session')->setDECLFCount($prevDECLF);
+                                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentdeclf_error'), 'billing');
+                        } else {
+                                Mage::getSingleton('core/session')->setAVSCount(0);
+                                Mage::getSingleton('core/session')->setDECLFCount(0);
+                                Mage::getSingleton('core/session')->setDECLCount(0);
+                                return $this;
+                        }
+                }
+        }
+	// if AVS correction is needed, redirect to billing address step
         if ($response->getIsAVSCorrectionRequired()) {
             $this->_failPaymentRequest(self::CREDITCARD_AVS_FAILED_MESSAGE, 'billing');
         }
@@ -381,6 +475,9 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         // request is at least acceptable - timeout perhaps - and if so, take it
         // and allow order submit to continue
         if ($response->getIsAuthAcceptable()) {
+            Mage::getSingleton('core/session')->setAVSCount(0);
+            Mage::getSingleton('core/session')->setDECLFCount(0);
+            Mage::getSingleton('core/session')->setDECLCount(0);
             return $this;
         }
         // auth failed for some other reason, possibly declined, making it unacceptable
@@ -946,6 +1043,41 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $this->_handleAuthCancelResponse($api, $payment);
         return $this;
     }
+
+    /**
+     * Void the payment
+     *
+     * @param Varien_Object $payment
+     * @return self
+     * @throws Mage_Core_Exception
+     */
+    public function cancel(Varien_Object $payment)
+    {
+	parent::cancel($payment);
+
+        $api = $this->_getAuthCancelApi($payment);
+        $this->_prepareAuthCancelRequest($api, $payment);
+        Mage::dispatchEvent('radial_creditcard_auth_cancel_request_send_before', [
+            'payload' => $api->getRequestBody(),
+            'payment' => $payment,
+        ]);
+        // Log the request instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Sending credit card auth cancel request.';
+        $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+        $this->_sendRequest($api);
+        // Log the response instead of expecting the SDK to have logged it.
+        // Allows the data to be properly scrubbed of any PII or other sensitive
+        // data prior to writing the log files.
+        $logMessage = 'Received credit card auth cancel response.';
+        $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
+        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
+        $this->_handleAuthCancelResponse($api, $payment);
+        return $this;
+    }
+
     /**
      * Refund the amount
      *
