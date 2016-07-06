@@ -373,7 +373,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         // if auth was a complete success or declined fraud, accept the response and move on
         if ($response->getIsAuthSuccessful() || $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLR ) {
-<<<<<<< HEAD
             Mage::getSingleton('core/session')->setAVSCount(0);
             Mage::getSingleton('core/session')->setDECLFCount(0);
             Mage::getSingleton('core/session')->setDECLCount(0);
@@ -421,59 +420,11 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
 
         // DECL from Payment Response
         $declLimit = Mage::getStoreConfig('radial_core/payments/paymentdecl');
-
-=======
-	    Mage::getSingleton('core/session')->setAVSCount(0);
-	    Mage::getSingleton('core/session')->setDECLFCount(0);
-	    Mage::getSingleton('core/session')->setDECLCount(0);
-            return $this;
-        }
-	// AVS mismatch from Payment Response
-	$avsLimit = Mage::getStoreConfig('radial_core/payments/paymentavs');
-	if( $avsLimit )
-	{
-		if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_AVS )
-		{
-			// Always fail if less than 0
-			if( $avsLimit < 0 )
-			{
-				$this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavs_error'), 'billing');
-			}
-			$prevAVS = Mage::getSingleton('core/session')->getAVSCount();
-		
-			if( $prevAVS < $avsLimit )
-			{
-				$prevAVS++;
-				Mage::getSingleton('core/session')->setAVSCount($prevAVS);
-				$this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavs_error'), 'billing');
-			} else {
-				Mage::getSingleton('core/session')->setAVSCount(0);
-            			Mage::getSingleton('core/session')->setDECLFCount(0);
-            			Mage::getSingleton('core/session')->setDECLCount(0);
-				return $this;
-			}
-		}
-	}
-	if( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_AVSCSC )
-	{
-		$this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavscsc_error'), 'payment');
-	}
-	if( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_CSC )
-        {
-                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentcsc_error'), 'payment');
-        }
-	// DECL from Payment Response
-        $declLimit = Mage::getStoreConfig('radial_core/payments/paymentdecl');
->>>>>>> 62b622859a4d6757ae21db733e23e21e698eb1d5
         if( $declLimit )
         {
                 if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
                 {
                         $prevDECL = Mage::getSingleton('core/session')->getDECLCount();
-<<<<<<< HEAD
-
-=======
->>>>>>> 62b622859a4d6757ae21db733e23e21e698eb1d5
                         if( $prevDECL < $declLimit )
                         {
                                 $prevDECL++;
@@ -487,24 +438,13 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         }
                 }
         }
-<<<<<<< HEAD
-
-        // DECLF from Payment Response
-        $declfLimit = Mage::getStoreConfig('radial_core/payments/paymentdeclf');
-
-=======
 	// DECLF from Payment Response
         $declfLimit = Mage::getStoreConfig('radial_core/payments/paymentdeclf');
->>>>>>> 62b622859a4d6757ae21db733e23e21e698eb1d5
         if( $declfLimit )
         {
                 if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
                 {
                         $prevDECLF = Mage::getSingleton('core/session')->getDECLFCount();
-<<<<<<< HEAD
-
-=======
->>>>>>> 62b622859a4d6757ae21db733e23e21e698eb1d5
                         if( $prevDECLF < $declfLimit )
                         {
                                 $prevDECLF++;
@@ -518,11 +458,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         }
                 }
         }
-<<<<<<< HEAD
-	// if AVS correction is needed, redirect to billing address step
-=======
         // if AVS correction is needed, redirect to billing address step
->>>>>>> 62b622859a4d6757ae21db733e23e21e698eb1d5
         if ($response->getIsAVSCorrectionRequired()) {
             $this->_failPaymentRequest(self::CREDITCARD_AVS_FAILED_MESSAGE, 'billing');
         }
@@ -534,11 +470,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         // request is at least acceptable - timeout perhaps - and if so, take it
         // and allow order submit to continue
         if ($response->getIsAuthAcceptable()) {
-<<<<<<< HEAD
             Mage::getSingleton('core/session')->setAVSCount(0);
-=======
-	    Mage::getSingleton('core/session')->setAVSCount(0);
->>>>>>> 62b622859a4d6757ae21db733e23e21e698eb1d5
             Mage::getSingleton('core/session')->setDECLFCount(0);
             Mage::getSingleton('core/session')->setDECLCount(0);
             return $this;
@@ -690,6 +622,22 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         $order = $invoice->getOrder();
         $payment = $order->getPayment();
+        $config = $this->_helper->getConfigModel();
+        return $this->_getApi(
+            $config->apiService,
+            $config->apiSettlement,
+            [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
+        );
+    }
+    /**
+     * Get the API SDK for the payment settlement request.
+     * @param Mage_Sales_Model_Order_Creditmemo
+     * @param Mage_Sales_Model_Payment
+     * @return Api\IBidirectionalApi
+     * @throws Mage_Core_Exception
+     */
+    protected function _getCreditmemoApi(Mage_Sales_Model_Order_Creditmemo $creditmemo, Mage_Sales_Model_Order_Payment $payment)
+    {
         $config = $this->_helper->getConfigModel();
         return $this->_getApi(
             $config->apiService,
@@ -1031,6 +979,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected function _handleDebitResponse(Api\IBidirectionalApi $api, Mage_Sales_Model_Order_Invoice $invoice)
     {
         $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_PAID);
+	$invoice->pay();
         return $this;
     }
     /**
@@ -1156,9 +1105,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $creditmemo->save();
         parent::processCreditmemo($creditmemo, $payment);
         try {
-            $invoice = $creditmemo->getInvoice();
-            $api = $this->_getSettlementApi($invoice);
-            $this->_prepareCreditRequest($api, $creditmemo, $payment);
+            $api = $this->_getCreditmemoApi($creditmemo, $payment);
+	    $this->_prepareCreditRequest($api, $creditmemo, $payment);
             Mage::dispatchEvent('radial_creditcard_settlement_credit_request_send_before', [
                 'payload' => $api->getRequestBody(),
                 'creditmemo' => $creditmemo,
@@ -1209,7 +1157,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $request = $api->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
-        $invoice = $creditmemo->getInvoice();
         $request
             ->setPanIsToken(true)
             ->setAmount((float)$creditmemo->getBaseGrandTotal())
@@ -1220,7 +1167,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setSettlementType(self::SETTLEMENT_TYPE_REFUND)
             ->setFinalDebit(0)
-            ->setInvoiceId($invoice->getIncrementId())
+            ->setInvoiceId($creditmemo->getIncrementId())
             ->setOrderId($order->getIncrementId());
         return $this;
     }
