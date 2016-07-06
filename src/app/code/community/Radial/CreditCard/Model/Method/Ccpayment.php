@@ -845,7 +845,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
-            ->setOrderId($order->getIncrementId());
+            ->setOrderId($order->getIncrementId())
+	    ->setPerformReauthorization(true);
         return $this;
     }
     /**
