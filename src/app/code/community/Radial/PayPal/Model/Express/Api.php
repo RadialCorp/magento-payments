@@ -322,7 +322,8 @@ class Radial_Paypal_Model_Express_Api
             ->setAmount((float)$amount)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
-            ->setOrderId($order->getIncrementId());
+            ->setOrderId($order->getIncrementId())
+	    ->setPerformReauthorization(true);
         return $this;
     }
     /**
