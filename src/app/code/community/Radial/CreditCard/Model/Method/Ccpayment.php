@@ -420,13 +420,11 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
 
         // DECL from Payment Response
         $declLimit = Mage::getStoreConfig('radial_core/payments/paymentdecl');
-
         if( $declLimit )
         {
                 if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
                 {
                         $prevDECL = Mage::getSingleton('core/session')->getDECLCount();
-
                         if( $prevDECL < $declLimit )
                         {
                                 $prevDECL++;
@@ -440,16 +438,13 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         }
                 }
         }
-
-        // DECLF from Payment Response
+	// DECLF from Payment Response
         $declfLimit = Mage::getStoreConfig('radial_core/payments/paymentdeclf');
-
         if( $declfLimit )
         {
                 if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
                 {
                         $prevDECLF = Mage::getSingleton('core/session')->getDECLFCount();
-
                         if( $prevDECLF < $declfLimit )
                         {
                                 $prevDECLF++;
@@ -463,7 +458,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         }
                 }
         }
-	// if AVS correction is needed, redirect to billing address step
+        // if AVS correction is needed, redirect to billing address step
         if ($response->getIsAVSCorrectionRequired()) {
             $this->_failPaymentRequest(self::CREDITCARD_AVS_FAILED_MESSAGE, 'billing');
         }
@@ -634,7 +629,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
         );
     }
-
     /**
      * Get the API SDK for the payment settlement request.
      * @param Mage_Sales_Model_Order_Creditmemo
@@ -651,7 +645,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
         );
     }
-
     /**
      * Get the API SDK for the payment auth cancel request.
      * @param Varien_Object $payment
@@ -845,7 +838,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setCardNumber($payment->getCcNumber())
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
-            ->setOrderId($order->getIncrementId());
+            ->setOrderId($order->getIncrementId())
+	    ->setPerformReauthorization(true);
         return $this;
     }
     /**
@@ -1112,7 +1106,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         parent::processCreditmemo($creditmemo, $payment);
         try {
             $api = $this->_getCreditmemoApi($creditmemo, $payment);
-            $this->_prepareCreditRequest($api, $creditmemo, $payment);
+	    $this->_prepareCreditRequest($api, $creditmemo, $payment);
             Mage::dispatchEvent('radial_creditcard_settlement_credit_request_send_before', [
                 'payload' => $api->getRequestBody(),
                 'creditmemo' => $creditmemo,
@@ -1133,12 +1127,12 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
             $this->_handleCreditResponse($api, $creditmemo, $payment);
         } catch (Exception $e) {
-       	    // settlement must be allowed to fail
-       	    // set creditmemo status as OPEN to trigger a retry and notify admin
-       	    $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
-	
+            // settlement must be allowed to fail
+            // set creditmemo status as OPEN to trigger a retry and notify admin
+            $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
+
 	    $retry = $creditmemo->getDeliveryStatus();
-      	    $retryN = $retry + 1;
+            $retryN = $retry + 1;
             $creditmemo->setDeliveryStatus($retryN);
             $creditmemo->save();
 
