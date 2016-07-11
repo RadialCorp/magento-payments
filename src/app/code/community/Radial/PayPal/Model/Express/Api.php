@@ -746,8 +746,15 @@ class Radial_Paypal_Model_Express_Api
                 ->processNegativeLineItems($quote, $container->getLineItems());
             $container->calculateLineItemsTotal();
             $container->setShippingTotal($this->getTotal('shipping', $quote));
-            $container->setTaxTotal($this->getTotal('radial_tax', $quote));
-            $container->setCurrencyCode($quote->getQuoteCurrencyCode());
+            
+	    if( Mage::helper('core')->isModuleEnabled('radial_tax'))
+            {
+                $container->setTaxTotal($this->getTotal('radial_tax', $quote));
+            } else {
+                $container->setTaxTotal(Mage::helper('checkout')->getQuote()->getShippingAddress()->getData('tax_amount'));
+            }
+
+	    $container->setCurrencyCode($quote->getQuoteCurrencyCode());
         }
     }
 
