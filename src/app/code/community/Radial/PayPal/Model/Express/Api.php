@@ -747,11 +747,11 @@ class Radial_Paypal_Model_Express_Api
             $container->calculateLineItemsTotal();
             $container->setShippingTotal($this->getTotal('shipping', $quote));
             
-	    if( isset($quote->getData()['radial_tax']))
+	    if( isset($quote->getTotals()['radial_tax']) && $quote->getTotals()['radial_tax']->getValue())
             {
                 $container->setTaxTotal($this->getTotal('radial_tax', $quote));
             } else {
-                $container->setTaxTotal(Mage::helper('checkout')->getQuote()->getShippingAddress()->getData('tax_amount'));
+                $container->setTaxTotal($quote->getTotals()['tax']->getValue());
             }
 
 	    $container->setCurrencyCode($quote->getQuoteCurrencyCode());
