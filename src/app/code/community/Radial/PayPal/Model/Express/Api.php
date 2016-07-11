@@ -747,7 +747,7 @@ class Radial_Paypal_Model_Express_Api
             $container->calculateLineItemsTotal();
             $container->setShippingTotal($this->getTotal('shipping', $quote));
             
-	    if( Mage::helper('core')->isModuleEnabled('radial_tax'))
+	    if( isset($quote->getData()['radial_tax']))
             {
                 $container->setTaxTotal($this->getTotal('radial_tax', $quote));
             } else {
