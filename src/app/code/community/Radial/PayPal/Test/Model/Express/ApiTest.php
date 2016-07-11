@@ -189,7 +189,7 @@ class Radial_PayPal_Test_Model_Express_ApiTest extends Radial_Core_Test_Base
                             [
                                 'grand_total' => new Varien_Object(['value' => 100]),
                                 'shipping' => new Varien_Object(['value' => 5.95]),
-                                'tax' => new Varien_Object(['value' => 2.50]),
+                                'tax_amount' => new Varien_Object(['value' => 2.50]),
                                 'discount' => new Varien_Object(['value' => 100]),
                             ]   
                 )       
