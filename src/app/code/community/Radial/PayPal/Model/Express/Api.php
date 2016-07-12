@@ -322,7 +322,8 @@ class Radial_Paypal_Model_Express_Api
             ->setAmount((float)$amount)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
             ->setRequestId($this->coreHelper->generateRequestId('CCA-'))
-            ->setOrderId($order->getIncrementId());
+            ->setOrderId($order->getIncrementId())
+	    ->setPerformReauthorization(true);
         return $this;
     }
     /**
@@ -745,8 +746,15 @@ class Radial_Paypal_Model_Express_Api
                 ->processNegativeLineItems($quote, $container->getLineItems());
             $container->calculateLineItemsTotal();
             $container->setShippingTotal($this->getTotal('shipping', $quote));
-            $container->setTaxTotal($this->getTotal('radial_tax', $quote));
-            $container->setCurrencyCode($quote->getQuoteCurrencyCode());
+            
+	    if( isset($quote->getTotals()['radial_tax']) && $quote->getTotals()['radial_tax']->getValue())
+            {
+                $container->setTaxTotal($this->getTotal('radial_tax', $quote));
+            } else {
+                $container->setTaxTotal($quote->getTotals()['tax']->getValue());
+            }
+
+	    $container->setCurrencyCode($quote->getQuoteCurrencyCode());
         }
     }
 
