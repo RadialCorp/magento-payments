@@ -80,6 +80,7 @@ http://opensource.org/licenses/osl-3.0.php
                 <cctypes>AE,VI,MC,DI</cctypes>
                 <payment_action>authorize</payment_action>
                 <allowspecific>0</allowspecific>
+		<encryption_key_algorithm>bt4</encryption_key_algorithm>
             </radial_creditcard>
         </payment>
         <radial_creditcard>
@@ -89,6 +90,7 @@ http://opensource.org/licenses/osl-3.0.php
                 <operation_confirm>funds/confirm</operation_confirm>
                 <operation_capture>settlement/create</operation_capture>
                 <operation_cancel>auth/cancel</operation_cancel>
+		<operation_pubkey>publickey/lookup</operation_pubkey>
             </api>
         </radial_creditcard>
     </default>
@@ -99,4 +101,12 @@ http://opensource.org/licenses/osl-3.0.php
             </modules>
         </suite>
     </phpunit>
+    <crontab>
+            <jobs>
+                <radial_creditcard_pubkey_sync>
+                    <schedule><cron_expr>30 6 * * *</cron_expr></schedule>
+                    <run><model>radial_creditcard/method_ccpayment::cronPubkeysync</model></run>
+                </radial_creditcard_pubkey_sync>
+            </jobs>
+     </crontab>
 </config>
