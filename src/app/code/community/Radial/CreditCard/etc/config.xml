@@ -81,6 +81,14 @@ http://opensource.org/licenses/osl-3.0.php
                 <payment_action>authorize</payment_action>
                 <allowspecific>0</allowspecific>
 		<encryption_key_algorithm>bt4</encryption_key_algorithm>
+		<paymentdecl_error>Credit Card Declined</paymentdecl_error>
+                <paymentdecl>0</paymentdecl>
+                <paymentdeclf_error>Credit Card Declined</paymentdeclf_error>
+                <paymentdeclf>0</paymentdeclf>
+                <paymentavs_error>Please Correct Billing Address</paymentavs_error>
+                <paymentavs>0</paymentavs>
+                <paymentavscsc_error>Please Correct Billing Address &amp; Card Security Code</paymentavscsc_error>
+                <paymentcsc_error>Please Correct Card Security Code</paymentcsc_error>
             </radial_creditcard>
         </payment>
         <radial_creditcard>

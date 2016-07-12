@@ -380,7 +380,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         }
 
         // AVS mismatch from Payment Response
-        $avsLimit = Mage::getStoreConfig('radial_core/payments/paymentavs');
+        $avsLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentavs');
 
         if( $avsLimit )
         {
@@ -389,7 +389,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         // Always fail if less than 0
                         if( $avsLimit < 0 )
                         {
-                                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavs_error'), 'billing');
+                                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavs_error'), 'billing');
                         }
 
                         $prevAVS = Mage::getSingleton('core/session')->getAVSCount();
@@ -398,7 +398,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         {
                                 $prevAVS++;
                                 Mage::getSingleton('core/session')->setAVSCount($prevAVS);
-                                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavs_error'), 'billing');
+                                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavs_error'), 'billing');
                         } else {
                                 Mage::getSingleton('core/session')->setAVSCount(0);
                                 Mage::getSingleton('core/session')->setDECLFCount(0);
@@ -410,16 +410,16 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
 
         if( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_AVSCSC )
         {
-                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentavscsc_error'), 'payment');
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavscsc_error'), 'payment');
         }
 
         if( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_CSC )
         {
-                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentcsc_error'), 'payment');
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentcsc_error'), 'payment');
         }
 
         // DECL from Payment Response
-        $declLimit = Mage::getStoreConfig('radial_core/payments/paymentdecl');
+        $declLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdecl');
         if( $declLimit )
         {
                 if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
@@ -429,7 +429,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         {
                                 $prevDECL++;
                                 Mage::getSingleton('core/session')->setDECLCount($prevDECL);
-                                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentdecl_error'), 'billing');
+                                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdecl_error'), 'billing');
                         } else {
                                 Mage::getSingleton('core/session')->setAVSCount(0);
                                 Mage::getSingleton('core/session')->setDECLFCount(0);
@@ -439,7 +439,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                 }
         }
 	// DECLF from Payment Response
-        $declfLimit = Mage::getStoreConfig('radial_core/payments/paymentdeclf');
+        $declfLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf');
         if( $declfLimit )
         {
                 if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
@@ -449,7 +449,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         {
                                 $prevDECLF++;
                                 Mage::getSingleton('core/session')->setDECLFCount($prevDECLF);
-                                $this->_failPaymentRequest(Mage::getStoreConfig('radial_core/payments/paymentdeclf_error'), 'billing');
+                                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf_error'), 'billing');
                         } else {
                                 Mage::getSingleton('core/session')->setAVSCount(0);
                                 Mage::getSingleton('core/session')->setDECLFCount(0);
