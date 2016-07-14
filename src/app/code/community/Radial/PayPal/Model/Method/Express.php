@@ -297,6 +297,20 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
     }
 
     /**
+     * Cancel payment abstract method
+     *
+     * @param Varien_Object $payment
+     *
+     * @return Mage_Payment_Model_Abstract
+     */
+    public function cancel(Varien_Object $payment)
+    {
+	parent::cancel($payment);
+        $this->_api->doVoidOrder($payment->getOrder());
+        return $this;
+    }
+
+    /**
      * Return true if the payment can be voided.
      *
      * @param  Varien_Object $payment
