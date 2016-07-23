@@ -371,20 +371,22 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     protected function _validateAuthResponse(Payload\Payment\ICreditCardAuthReply $response)
     {
-        // if auth was a complete success or declined fraud, accept the response and move on
+    	// if auth was a complete success or declined fraud, accept the response and move on
         if ($response->getIsAuthSuccessful() || $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLR ) {
             Mage::getSingleton('core/session')->setAVSCount(0);
             Mage::getSingleton('core/session')->setDECLFCount(0);
             Mage::getSingleton('core/session')->setDECLCount(0);
             return $this;
         }
-
-        // AVS mismatch from Payment Response
+        if( $response->getIsAVSCorrectionRequired() && $response->getIsCVV2CorrectionRequired())
+        {
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavscsc_error'), 'payment');
+        }
+        // if AVS correction is needed, redirect to billing address step
         $avsLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentavs');
-
         if( $avsLimit )
         {
-                if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_AVS )
+                if ($response->getIsAVSCorrectionRequired())
                 {
                         // Always fail if less than 0
                         if( $avsLimit < 0 )
@@ -407,17 +409,19 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         }
                 }
         }
-
-        if( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_AVSCSC )
-        {
-                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavscsc_error'), 'payment');
+        // if CVV correction is needed, redirect to payment method step
+        if ($response->getIsCVV2CorrectionRequired()) {
+            $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentcsc_error'), 'payment');
         }
-
-        if( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_CSC )
-        {
-                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentcsc_error'), 'payment');
+        // if AVS & CVV did not fail but was not a complete success, see if the
+        // request is at least acceptable - timeout perhaps - and if so, take it
+        // and allow order submit to continue
+        if ($response->getIsAuthAcceptable()) {
+            Mage::getSingleton('core/session')->setAVSCount(0);
+            Mage::getSingleton('core/session')->setDECLFCount(0);
+            Mage::getSingleton('core/session')->setDECLCount(0);
+            return $this;
         }
-
         // DECL from Payment Response
         $declLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdecl');
         if( $declLimit )
@@ -428,7 +432,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         if( $prevDECL < $declLimit )
                         {
                                 $prevDECL++;
-                                Mage::getSingleton('core/session')->setDECLCount($prevDECL);
+				Mage::getSingleton('core/session')->setDECLCount($prevDECL);
                                 $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdecl_error'), 'billing');
                         } else {
                                 Mage::getSingleton('core/session')->setAVSCount(0);
@@ -438,7 +442,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         }
                 }
         }
-	// DECLF from Payment Response
+        // DECLF from Payment Response
         $declfLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf');
         if( $declfLimit )
         {
@@ -457,23 +461,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                                 return $this;
                         }
                 }
-        }
-        // if AVS correction is needed, redirect to billing address step
-        if ($response->getIsAVSCorrectionRequired()) {
-            $this->_failPaymentRequest(self::CREDITCARD_AVS_FAILED_MESSAGE, 'billing');
-        }
-        // if CVV correction is needed, redirect to payment method step
-        if ($response->getIsCVV2CorrectionRequired()) {
-            $this->_failPaymentRequest(self::CREDITCARD_CVV_FAILED_MESSAGE, 'payment');
-        }
-        // if AVS & CVV did not fail but was not a complete success, see if the
-        // request is at least acceptable - timeout perhaps - and if so, take it
-        // and allow order submit to continue
-        if ($response->getIsAuthAcceptable()) {
-            Mage::getSingleton('core/session')->setAVSCount(0);
-            Mage::getSingleton('core/session')->setDECLFCount(0);
-            Mage::getSingleton('core/session')->setDECLCount(0);
-            return $this;
         }
         // auth failed for some other reason, possibly declined, making it unacceptable
         // send user to payment step of checkout with an error message
