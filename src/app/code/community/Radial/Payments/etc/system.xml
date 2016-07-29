@@ -65,6 +65,15 @@ http://opensource.org/licenses/osl-3.0.php
                             		<show_in_website>1</show_in_website>
                             		<show_in_store>0</show_in_store>
                         	    </purge_retryqueue>
+				    <payments_email translate="label">
+                            		<label>Payments Admin Email</label>
+					<comment>Comma Delineated List</comment>
+                            		<sort_order>9</sort_order>
+                            		<frontend_type>text</frontend_type>
+                            		<show_in_default>1</show_in_default>
+                            		<show_in_website>0</show_in_website>
+                            		<show_in_store>0</show_in_store>
+                        	    </payments_email>
 				    <responsetimeout translate="label">
 		                            <label>Payments Response Timeout</label>
         		                    <comment>Time in milliseconds</comment>

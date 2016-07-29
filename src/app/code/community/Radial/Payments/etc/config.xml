@@ -71,6 +71,15 @@ http://opensource.org/licenses/osl-3.0.php
                 </setup>
             </radial_payments_setup>
         </resources>
+	<template>
+                <email>
+                        <custom_email_template2 module="Payments">
+                                <label>Radial - Payments Exception Report</label>
+                                <file>payments_exception_template.html</file>
+                                <type>html</type>
+                        </custom_email_template2>
+                </email>
+        </template>
     </global>
     <admin>
         <routers>
