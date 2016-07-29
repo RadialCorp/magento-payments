@@ -902,6 +902,44 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
             $this->getSession()->addNotice($errorMessage);
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
+
+	    $paymentsEmailA = explode(',', Mage::getStoreConfig('radial_core/payments/payments_email'));
+            if( !empty($paymentsEmailA) )
+            {
+                foreach( $paymentsEmailA as $paymentsEmail )
+                {
+                        $paymentsName = Mage::app()->getStore()->getName() . ' - ' . 'Payments Admin';
+                        $emailTemplate  = Mage::getModel('core/email_template')->loadDefault('custom_email_template2');
+
+                        //Create an array of variables to assign to template
+                        $emailTemplateVariables = array();
+                        $emailTemplateVariables['myvar1'] = gmdate("Y-m-d\TH:i:s\Z");
+                        $emailTemplateVariables['myvar2'] = $e->getMessage();
+                        $emailTemplateVariables['myvar3'] = $e->getTraceAsString();
+                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedResponseXml);
+
+                        $processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
+                        //Sending E-Mail to Payments Admin Email.
+                        $mail = Mage::getModel('core/email')
+                                ->setToName($paymentsName)
+                                ->setToEmail($paymentsEmail)
+                                ->setBody($processedTemplate)
+                                ->setSubject('Payments - Settlement - Exception Report From: '. __CLASS__ . ' on ' . gmdate("Y-m-d\TH:i:s\Z") . ' UTC')
+                                ->setFromEmail(Mage::getStoreConfig('trans_email/ident_general/email'))
+                                ->setFromName($paymentsName)
+                                ->setType('html');
+                        try 
+                        {
+                                //Confimation E-Mail Send
+                                $mail->send();
+                        }
+                        catch(Exception $error)
+                        {
+                                $logMessage = sprintf('[%s] Error Sending Email: %s', __CLASS__, $error->getMessage());
+                                Mage::log($logMessage, Zend_Log::ERR);
+                        }
+                 }
+            }
         }
         return $this;
     }
@@ -1139,6 +1177,44 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $errorMessage = $this->_helper->__(self::SETTLEMENT_FAILED_MESSAGE);
             $this->getSession()->addNotice($errorMessage);
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
+
+	    $paymentsEmailA = explode(',', Mage::getStoreConfig('radial_core/payments/payments_email'));
+            if( !empty($paymentsEmailA) )
+            {
+                foreach( $paymentsEmailA as $paymentsEmail )
+                {
+                        $paymentsName = Mage::app()->getStore()->getName() . ' - ' . 'Payments Admin';
+                        $emailTemplate  = Mage::getModel('core/email_template')->loadDefault('custom_email_template2');
+
+                        //Create an array of variables to assign to template
+                        $emailTemplateVariables = array();
+                        $emailTemplateVariables['myvar1'] = gmdate("Y-m-d\TH:i:s\Z");
+                        $emailTemplateVariables['myvar2'] = $e->getMessage();
+                        $emailTemplateVariables['myvar3'] = $e->getTraceAsString();
+                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedResponseXml);
+
+                        $processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
+                        //Sending E-Mail to Payments Admin Email.
+                        $mail = Mage::getModel('core/email')
+                                ->setToName($paymentsName)
+                                ->setToEmail($paymentsEmail)
+                                ->setBody($processedTemplate)
+                                ->setSubject('Payments - Credit Memo - Exception Report From: '. __CLASS__ . ' on ' . gmdate("Y-m-d\TH:i:s\Z") . ' UTC')
+                                ->setFromEmail(Mage::getStoreConfig('trans_email/ident_general/email'))
+                                ->setFromName($paymentsName)
+                                ->setType('html');
+                        try 
+                        {
+                                //Confimation E-Mail Send
+                                $mail->send();
+                        }
+                        catch(Exception $error)
+                        {
+                                $logMessage = sprintf('[%s] Error Sending Email: %s', __CLASS__, $error->getMessage());
+                                Mage::log($logMessage, Zend_Log::ERR);
+                        }
+                 }
+            }
         }
         return $this;
     }
