@@ -16,7 +16,7 @@ http://opensource.org/licenses/osl-3.0.php
     <adminhtml_sales_order_create_index>
         <reference name="head">
             <action method="addJs">
-                <script>radial_creditcard/braintree.js</script>
+                <script>radial_creditcard/braintree-2.27.0.min.js</script>
                 <params>integrity="YjI3YWM3OTkwNWMxODFkYzRiZjhlOTU2ODJhODE1YzZmMGJiYmNiYmQzNTg0Yjk5NjA5ZGNmNWJhZmFmYzJmMw"</params>
             </action>
         </reference>
