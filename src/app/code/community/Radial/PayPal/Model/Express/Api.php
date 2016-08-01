@@ -751,8 +751,13 @@ class Radial_Paypal_Model_Express_Api
             {
                 $container->setTaxTotal($this->getTotal('radial_tax', $quote));
             } else {
-                $container->setTaxTotal($quote->getTotals()['tax']->getValue());
-            }
+                if( isset($quote->getTotals()['tax']) && $quote->getTotals()['tax']->getValue())
+                {
+                        $container->setTaxTotal($quote->getTotals()['tax']->getValue());
+                } else {
+                        $container->setTaxTotal(0);
+                }
+	    }
 
 	    $container->setCurrencyCode($quote->getQuoteCurrencyCode());
         }

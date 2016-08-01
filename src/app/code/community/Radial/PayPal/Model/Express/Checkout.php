@@ -46,6 +46,8 @@ class Radial_PayPal_Model_Express_Checkout
     const PAYMENT_INFO_IS_AUTHORIZED_FLAG = 'is_authorized';
     const PAYMENT_INFO_IS_VOIDED_FLAG = 'is_voided';
     const PAYMENT_INFO_ADDRESS_STATUS = 'paypal_express_checkout_address_status';
+    const PAYMENT_INFO_PAYER_STATUS = 'paypal_express_checkout_payer_status';
+    const PAYMENT_INFO_PAYER_COUNTRY = 'paypal_express_checkout_payer_country';
 
     /** @var string Flag from the request that indicates checkout was initiated outside normal checkout flow */
     const PAYMENT_INFO_BUTTON = 'button';
@@ -301,7 +303,9 @@ class Radial_PayPal_Model_Express_Checkout
         $quote->getPayment()
             ->setAdditionalInformation(self::PAYMENT_INFO_PAYER_ID, $getExpressCheckoutReply['payer_id'])
             ->setAdditionalInformation(self::PAYMENT_INFO_TOKEN, $token)
-            ->setAdditionalInformation(self::PAYMENT_INFO_ADDRESS_STATUS, $paypalShippingAddress['status']);
+            ->setAdditionalInformation(self::PAYMENT_INFO_ADDRESS_STATUS, $paypalShippingAddress['status'])
+	    ->setAdditionalInformation(self::PAYMENT_INFO_PAYER_STATUS, $getExpressCheckoutReply['status'])
+            ->setAdditionalInformation(self::PAYMENT_INFO_PAYER_COUNTRY, $paypalShippingAddress['country_id']);
         $quote->collectTotals()->save();
     }
 

@@ -382,7 +382,6 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
     public function cancel(Varien_Object $payment)
     {
 	parent::cancel($payment);
-
         $this->_api->doVoidOrder($payment->getOrder());
         return $this;
     }
