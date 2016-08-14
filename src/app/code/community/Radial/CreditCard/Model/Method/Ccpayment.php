@@ -1313,11 +1313,11 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         // if auth was a complete success, accept the response and move on
         if ($response->getPublicKey()) {
-	    $trimPublicKey = rtrim($response->getPublicKey());
+            $trimPublicKey = preg_replace('~[\r\n]+~', '', $response->getPublicKey());
 
             Mage::getModel('core/config')->saveConfig('payment/radial_creditcard/encryption_key', $trimPublicKey);
-	    Mage::dispatchEvent('adminhtml_cache_refresh_type', array('type' => "config"));
-        }
+            Mage::app()->cleanCache();
+	}
         return $this;
     }  
     /**
