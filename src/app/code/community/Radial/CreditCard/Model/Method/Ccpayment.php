@@ -656,7 +656,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         return $this->_getApi(
             $config->apiService,
             $config->apiPubkey,
-	    null
+	    array() 
         );
     }
     /**
