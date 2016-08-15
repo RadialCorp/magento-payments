@@ -373,7 +373,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected function _validateAuthResponse(Payload\Payment\ICreditCardAuthReply $response)
     {
     	// if auth was a complete success or declined fraud, accept the response and move on
-        if ($response->getIsAuthSuccessful() || $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLR ) {
+        if ($response->getIsAuthSuccessful() || $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLR ) {
             Mage::getSingleton('core/session')->setAVSCount(0);
             Mage::getSingleton('core/session')->setDECLFCount(0);
             Mage::getSingleton('core/session')->setDECLCount(0);
@@ -427,7 +427,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $declLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdecl');
         if( $declLimit )
         {
-                if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
+                if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
                 {
                         $prevDECL = Mage::getSingleton('core/session')->getDECLCount();
                         if( $prevDECL < $declLimit )
@@ -447,7 +447,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $declfLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf');
         if( $declfLimit )
         {
-                if ( $response->getResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
+                if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
                 {
                         $prevDECLF = Mage::getSingleton('core/session')->getDECLFCount();
                         if( $prevDECLF < $declfLimit )
