@@ -361,7 +361,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setShipToMainDivision($shippingAddress->getRegionCode())
             ->setShipToCountryCode($shippingAddress->getCountry())
             ->setShipToPostalCode($shippingAddress->getPostcode())
-            ->setIsRequestToCorrectCVVOrAVSError($this->_getIsCorrectionNeededForPayment($payment));
+            ->setIsRequestToCorrectCVVOrAVSError($this->_getIsCorrectionNeededForPayment($payment))
+	    ->setSchemaVersion(1.1);
         return $this;
     }
     /**
