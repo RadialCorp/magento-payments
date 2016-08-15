@@ -205,7 +205,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                         $emailTemplateVariables['myvar1'] = gmdate("Y-m-d\TH:i:s\Z");
                         $emailTemplateVariables['myvar2'] = $e->getMessage();
                         $emailTemplateVariables['myvar3'] = $e->getTraceAsString();
-                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedResponseXml);
+                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedRequestXml);
 
                         $processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
                         //Sending E-Mail to Payments Admin Email.
@@ -274,7 +274,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                         $emailTemplateVariables['myvar1'] = gmdate("Y-m-d\TH:i:s\Z");
                         $emailTemplateVariables['myvar2'] = $e->getMessage();
                         $emailTemplateVariables['myvar3'] = $e->getTraceAsString();
-                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedResponseXml);
+                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedRequestXml);
 
                         $processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
                         //Sending E-Mail to Payments Admin Email.
