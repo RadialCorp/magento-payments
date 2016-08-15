@@ -903,9 +903,10 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->getSession()->addNotice($errorMessage);
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
 
-	    $paymentsEmailA = explode(',', Mage::getStoreConfig('radial_core/payments/payments_email'));
-            if( !empty($paymentsEmailA) )
+	    $paymentsEmailProp = Mage::getStoreConfig('radial_core/payments/payments_email');
+            if( $paymentsEmailProp )
             {
+		$paymentsEmailA = explode(',', $paymentsEmailProp);
                 foreach( $paymentsEmailA as $paymentsEmail )
                 {
                         $paymentsName = Mage::app()->getStore()->getName() . ' - ' . 'Payments Admin';
@@ -1178,9 +1179,10 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->getSession()->addNotice($errorMessage);
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
 
-	    $paymentsEmailA = explode(',', Mage::getStoreConfig('radial_core/payments/payments_email'));
-            if( !empty($paymentsEmailA) )
+	    $paymentsEmailProp = Mage::getStoreConfig('radial_core/payments/payments_email');
+            if( $paymentsEmailProp )
             {
+		$paymentsEmailA = explode(',', $paymentsEmailProp);
                 foreach( $paymentsEmailA as $paymentsEmail )
                 {
                         $paymentsName = Mage::app()->getStore()->getName() . ' - ' . 'Payments Admin';
