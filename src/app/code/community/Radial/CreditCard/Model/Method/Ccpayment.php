@@ -379,39 +379,45 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             Mage::getSingleton('core/session')->setDECLCount(0);
             return $this;
         }
-        if( $response->getIsAVSCorrectionRequired() && $response->getIsCVV2CorrectionRequired())
+        if( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_AVSCSC )
         {
                 $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavscsc_error'), 'payment');
         }
-        // if AVS correction is needed, redirect to billing address step
-        $avsLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentavs');
-        if( $avsLimit )
+        if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_AVS)
         {
-                if ($response->getIsAVSCorrectionRequired())
-                {
-                        // Always fail if less than 0
-                        if( $avsLimit < 0 )
-                        {
-                                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavs_error'), 'billing');
-                        }
+	    // if AVS correction is needed, redirect to billing address step
+            $avsLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentavs');
 
-                        $prevAVS = Mage::getSingleton('core/session')->getAVSCount();
+            if( $avsLimit === 0 )
+            {   
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }   
 
-                        if( $prevAVS < $avsLimit )
-                        {
-                                $prevAVS++;
-                                Mage::getSingleton('core/session')->setAVSCount($prevAVS);
-                                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavs_error'), 'billing');
-                        } else {
-                                Mage::getSingleton('core/session')->setAVSCount(0);
-                                Mage::getSingleton('core/session')->setDECLFCount(0);
-                                Mage::getSingleton('core/session')->setDECLCount(0);
-                                return $this;
-                        }
-                }
+            // Always fail if less than 0
+            if( $avsLimit < 0 )
+            {
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavs_error'), 'billing');
+            }
+
+            $prevAVS = Mage::getSingleton('core/session')->getAVSCount();
+
+            if( $prevAVS < $avsLimit )
+            {
+                $prevAVS++;
+                Mage::getSingleton('core/session')->setAVSCount($prevAVS);
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavs_error'), 'billing');
+            } else {
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }
         }
         // if CVV correction is needed, redirect to payment method step
-        if ($response->getIsCVV2CorrectionRequired()) {
+        if ($response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_CSC) {
             $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentcsc_error'), 'payment');
         }
         // if AVS & CVV did not fail but was not a complete success, see if the
@@ -423,45 +429,69 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             Mage::getSingleton('core/session')->setDECLCount(0);
             return $this;
         }
-        // DECL from Payment Response
-        $declLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdecl');
-        if( $declLimit )
+        if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
         {
-                if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
-                {
-                        $prevDECL = Mage::getSingleton('core/session')->getDECLCount();
-                        if( $prevDECL < $declLimit )
-                        {
-                                $prevDECL++;
-				Mage::getSingleton('core/session')->setDECLCount($prevDECL);
-                                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdecl_error'), 'billing');
-                        } else {
-                                Mage::getSingleton('core/session')->setAVSCount(0);
-                                Mage::getSingleton('core/session')->setDECLFCount(0);
-                                Mage::getSingleton('core/session')->setDECLCount(0);
-                                return $this;
-                        }
-                }
+	    // DECL from Payment Response
+            $declLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdecl');
+            
+	    if( $declLimit === 0 )
+            {
+		Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+	    }
+
+	    if( $declLimit < 0 )
+	    {
+		// fail if less then 0
+		$this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdecl_error'), 'billing');
+	    }
+
+	    $prevDECL = Mage::getSingleton('core/session')->getDECLCount();
+            if( $prevDECL < $declLimit )
+            {
+            	$prevDECL++;
+		Mage::getSingleton('core/session')->setDECLCount($prevDECL);
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdecl_error'), 'billing');
+            } else {
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }
         }
-        // DECLF from Payment Response
-        $declfLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf');
-        if( $declfLimit )
+        if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
         {
-                if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
-                {
-                        $prevDECLF = Mage::getSingleton('core/session')->getDECLFCount();
-                        if( $prevDECLF < $declfLimit )
-                        {
-                                $prevDECLF++;
-                                Mage::getSingleton('core/session')->setDECLFCount($prevDECLF);
-                                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf_error'), 'billing');
-                        } else {
-                                Mage::getSingleton('core/session')->setAVSCount(0);
-                                Mage::getSingleton('core/session')->setDECLFCount(0);
-                                Mage::getSingleton('core/session')->setDECLCount(0);
-                                return $this;
-                        }
-                }
+	    // DECLF from Payment Response
+            $declfLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf');
+                
+	    if( $declfLimit === 0 )
+            {
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }
+
+            if( $declfLimit < 0 )
+            {
+                // fail if less then 0
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf_error'), 'billing');
+            }
+
+	    $prevDECLF = Mage::getSingleton('core/session')->getDECLFCount();
+            if( $prevDECLF < $declfLimit )
+            {
+                $prevDECLF++;
+                Mage::getSingleton('core/session')->setDECLFCount($prevDECLF);
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf_error'), 'billing');
+            } else {
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }
         }
         // auth failed for some other reason, possibly declined, making it unacceptable
         // send user to payment step of checkout with an error message
