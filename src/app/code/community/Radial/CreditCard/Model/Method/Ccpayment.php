@@ -542,6 +542,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             'tender_type' => $this->_helper->getTenderTypeForCcType($payment->getCcType()),
             'is_correction_required' => $correctionRequired,
             'last4_to_correct' => $correctionRequired ? $payment->getCcLast4() : null,
+	    'risk_response_code' => $response->getRiskResponseCode(),
         ])
             ->setAmountAuthorized($response->getAmountAuthorized())
             ->setBaseAmountAuthorized($response->getAmountAuthorized())
