@@ -15,7 +15,7 @@ http://opensource.org/licenses/osl-3.0.php
 <config>
     <modules>
         <Radial_Payments>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
         </Radial_Payments>
     </modules>
     <global>
@@ -29,7 +29,7 @@ http://opensource.org/licenses/osl-3.0.php
                 <class>Radial_Payments_Model</class>
             </radial_payments>
         </models>
-	<blocks>
+	    <blocks>
             <radial_payments>
                 <class>Radial_Payments_Block</class>
             </radial_payments>
@@ -53,17 +53,38 @@ http://opensource.org/licenses/osl-3.0.php
                     </radial_creditcard_payments_settlements_status_observer>
                 </observers>
             </radial_amqp_message_settlement_status>
-	    <sales_order_payment_cancel>
-		<observers>
-			<radial_payments_cancel>
-			    <type>model</type>
-			    <class>radial_payments/observer</class>
-			    <method>processOrderCancel</method>
-			</radial_payments_cancel>
-		</observers>
-	    </sales_order_payment_cancel>
+            <sales_order_payment_cancel>
+                <observers>
+                    <radial_payments_cancel>
+                        <type>model</type>
+                        <class>radial_payments/observer</class>
+                        <method>processOrderCancel</method>
+                    </radial_payments_cancel>
+                </observers>
+            </sales_order_payment_cancel>
+
+            <!-- BOF: Automated Invoicing -->
+            <radial_eb2cfraud_dispatch_fraud_accept>
+                <observers>
+                    <radial_invoicing_handle_fraud_accept>
+                        <type>model</type>
+                        <class>radial_payments/invoicing_observer</class>
+                        <method>handleFraudAccept</method>
+                    </radial_invoicing_handle_fraud_accept>
+                </observers>
+            </radial_eb2cfraud_dispatch_fraud_accept>
+            <sales_order_shipment_save_after>
+                <observers>
+                    <radial_invoicing_handle_shipment_save>
+                        <type>model</type>
+                        <class>radial_payments/invoicing_observer</class>
+                        <method>handleShipmentSave</method>
+                    </radial_invoicing_handle_shipment_save>
+                </observers>
+            </sales_order_shipment_save_after>
+            <!-- EOF: Automated Invoicing -->
         </events>
-	<resources>
+	    <resources>
             <radial_payments_setup>
                 <setup>
                     <module>Radial_Payments</module>
@@ -71,10 +92,10 @@ http://opensource.org/licenses/osl-3.0.php
                 </setup>
             </radial_payments_setup>
         </resources>
-	<template>
+	    <template>
                 <email>
                         <custom_email_template2 module="Payments">
-                                <label>Radial - Payments Exception Report</label>
+                               <label>Radial - Payments Exception Report</label>
                                 <file>payments_exception_template.html</file>
                                 <type>html</type>
                         </custom_email_template2>
@@ -90,7 +111,7 @@ http://opensource.org/licenses/osl-3.0.php
                     </modules>
                 </args>
             </adminhtml>
-	    <admin>
+	        <admin>
                 <use>admin</use>
                 <args>
                     <frontName>radial_payments</frontName>
@@ -108,11 +129,11 @@ http://opensource.org/licenses/osl-3.0.php
         </jobs>
     </crontab>
     <default>
-	<radial_core>
-                <payments>
-                        <maxretries>3</maxretries>
-			<responsetimeout>20000</responsetimeout>
-                </payments>
+	    <radial_core>
+            <payments>
+                <maxretries>3</maxretries>
+                <responsetimeout>20000</responsetimeout>
+            </payments>
         </radial_core>
     </default>
 </config>
