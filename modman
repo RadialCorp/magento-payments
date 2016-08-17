@@ -17,4 +17,8 @@ src/js/* js/
 src/app/locale/en_US/Radial_CreditCard.csv app/locale/en_US/Radial_CreditCard.csv
 src/app/locale/en_US/Radial_PayPal.csv app/locale/en_US/Radial_PayPal.csv
 src/app/locale/en_US/Radial_Transactions.csv app/locale/en_US/Radial_Transactions.csv
+<<<<<<< HEAD
 src/app/locale/en_US/payments_exception_template.html app/locale/en_US/payments_exception_template.html
+=======
+src/app/locale/en_US/template/email/payments_exception_template.html app/locale/en_US/template/email/payments_exception_template.html
+>>>>>>> upstream/phase2

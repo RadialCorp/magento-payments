@@ -20,6 +20,7 @@ class Radial_CreditCard_Model_Config extends Radial_Core_Model_Config_Abstract
         'api_confirm_funds' => 'radial_creditcard/api/operation_confirm',
         'api_settlement' => 'radial_creditcard/api/operation_capture',
         'api_auth_cancel' => 'radial_creditcard/api/operation_cancel',
+	'api_pubkey' => 'radial_creditcard/api/operation_pubkey',
         'api_service' => 'radial_creditcard/api/service',
         'encryption_key' => 'payment/radial_creditcard/encryption_key',
         'tender_types' => 'radial_creditcard/tender_types',

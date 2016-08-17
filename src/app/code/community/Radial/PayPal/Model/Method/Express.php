@@ -205,7 +205,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                         $emailTemplateVariables['myvar1'] = gmdate("Y-m-d\TH:i:s\Z");
                         $emailTemplateVariables['myvar2'] = $e->getMessage();
                         $emailTemplateVariables['myvar3'] = $e->getTraceAsString();
-                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedResponseXml);
+                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedRequestXml);
 
                         $processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
                         //Sending E-Mail to Payments Admin Email.
@@ -217,7 +217,8 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                                 ->setFromEmail(Mage::getStoreConfig('trans_email/ident_general/email'))
                                 ->setFromName($paymentsName)
                                 ->setType('html');
-                        try {
+                        try 
+			{
                                 //Confimation E-Mail Send
                                 $mail->send();
                         }
@@ -225,7 +226,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                         {
                                 $logMessage = sprintf('[%s] Error Sending Email: %s', __CLASS__, $error->getMessage());
                                 Mage::log($logMessage, Zend_Log::ERR);
-                        }
+			}
                 }
             }
         }
@@ -273,7 +274,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                         $emailTemplateVariables['myvar1'] = gmdate("Y-m-d\TH:i:s\Z");
                         $emailTemplateVariables['myvar2'] = $e->getMessage();
                         $emailTemplateVariables['myvar3'] = $e->getTraceAsString();
-                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedResponseXml);
+                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedRequestXml);
 
                         $processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
                         //Sending E-Mail to Payments Admin Email.
@@ -285,7 +286,8 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                                 ->setFromEmail(Mage::getStoreConfig('trans_email/ident_general/email'))
                                 ->setFromName($paymentsName)
                                 ->setType('html');
-                        try {
+                        try 
+                        {
                                 //Confimation E-Mail Send
                                 $mail->send();
                         }
