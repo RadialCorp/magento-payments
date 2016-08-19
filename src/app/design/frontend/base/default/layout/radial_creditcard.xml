@@ -16,14 +16,14 @@ http://opensource.org/licenses/osl-3.0.php
     <checkout_onepage_index>
         <reference name="head">
             <action method="addJs">
-                <script>radial_creditcard/braintree.js</script>
+                <script>radial_creditcard/braintree-2.27.0.min.js</script>
             </action>
         </reference>
     </checkout_onepage_index>
     <checkout_multishipping>
         <reference name="head">
             <action method="addJs">
-                <script>radial_creditcard/braintree.js</script>
+                <script>radial_creditcard/braintree-2.27.0.min.js</script>
             </action>
         </reference>
     </checkout_multishipping>

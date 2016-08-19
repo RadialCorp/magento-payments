@@ -15,78 +15,107 @@ http://opensource.org/licenses/osl-3.0.php
 <config>
     <sections>
         <radial_core>
-                <groups>
-                        <payments translate="label">
-                            <label>Payments</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>500</sort_order>
+			<groups>
+				<payments translate="label">
+					<label>Payments</label>
+					<frontend_type>text</frontend_type>
+					<sort_order>400</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>0</show_in_website>
+					<show_in_store>0</show_in_store>
+					<fields>
+						<maxretries translate="label">
+							<label>Maximum Payments Transmission Retries</label>
+							<sort_order>4</sort_order>
+							<frontend_type>text</frontend_type>
+							<validate>validate-number</validate>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>0</show_in_store>
+						</maxretries>
+						<maxmessagestatus translate="label">
+							<sort_order>5</sort_order>
+							<frontend_type>label</frontend_type>
+							<backend_model>radial_payments/adminhtml_system_config_backend_nummaxretry</backend_model>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</maxmessagestatus>
+						<totalmessagestatus translate="label">
+							<sort_order>6</sort_order>
+							<frontend_type>label</frontend_type>
+							<backend_model>radial_payments/adminhtml_system_config_backend_totalnumretry</backend_model>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</totalmessagestatus>
+						<reset_transmission_status translate="label">
+							<sort_order>7</sort_order>
+							<frontend_type>button</frontend_type>
+							<frontend_model>radial_payments/adminhtml_system_config_backend_messagereset</frontend_model>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>0</show_in_store>
+						</reset_transmission_status>
+						<purge_retryqueue translate="label">
+							<sort_order>8</sort_order>
+							<frontend_type>button</frontend_type>
+							<frontend_model>radial_payments/adminhtml_system_config_backend_purgeretryqueue</frontend_model>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>0</show_in_store>
+						</purge_retryqueue>
+						<payments_email translate="label">
+							<label>Payments Admin Email</label>
+							<comment>Comma Delineated List</comment>
+							<sort_order>9</sort_order>
+							<frontend_type>text</frontend_type>
+							<show_in_default>1</show_in_default>
+							<show_in_website>0</show_in_website>
+							<show_in_store>0</show_in_store>
+						</payments_email>
+						<responsetimeout translate="label">
+							<label>Payments Response Timeout</label>
+							<comment>Time in milliseconds</comment>
+							<sort_order>10</sort_order>
+							<frontend_type>text</frontend_type>
+							<validate>validate-number</validate>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>0</show_in_store>
+						</responsetimeout>
+					</fields>
+				</payments>
+				<!-- BOF: Automated Invoicing -->
+				<radial_invoicing>
+					<label>Automated Invoicing</label>
+					<sort_order>450</sort_order>
+					<show_in_default>1</show_in_default>
+					<show_in_website>1</show_in_website>
+					<show_in_store>1</show_in_store>
+					<fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
                             <show_in_default>1</show_in_default>
-                            <show_in_website>0</show_in_website>
+                            <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <fields>
-                                    <maxretries translate="label">
-                                        <label>Maximum Payments Transmission Retries</label>
-                                        <sort_order>4</sort_order>
-                                        <frontend_type>text</frontend_type>
-                                        <validate>validate-number</validate>
-                                        <show_in_default>1</show_in_default>
-                                        <show_in_website>1</show_in_website>
-                                        <show_in_store>0</show_in_store>
-                                    </maxretries>
-				    <maxmessagestatus translate="label">
-                            		<sort_order>5</sort_order>
-                            		<frontend_type>label</frontend_type>
-                            		<backend_model>radial_payments/adminhtml_system_config_backend_nummaxretry</backend_model>
-                            		<show_in_default>1</show_in_default>
-                            		<show_in_website>0</show_in_website>
-                            		<show_in_store>0</show_in_store>
-                        	    </maxmessagestatus>
-                        	    <totalmessagestatus translate="label">
-                            		<sort_order>6</sort_order>
-                            		<frontend_type>label</frontend_type>
-                            		<backend_model>radial_payments/adminhtml_system_config_backend_totalnumretry</backend_model>
-                            		<show_in_default>1</show_in_default>
-                            		<show_in_website>0</show_in_website>
-                            		<show_in_store>0</show_in_store>
-                        	    </totalmessagestatus>
-                        	    <reset_transmission_status translate="label">
-                            		<sort_order>7</sort_order>
-                            		<frontend_type>button</frontend_type>
-                            		<frontend_model>radial_payments/adminhtml_system_config_backend_messagereset</frontend_model>
-                            		<show_in_default>1</show_in_default>
-                            		<show_in_website>1</show_in_website>
-                            		<show_in_store>0</show_in_store>
-                        	    </reset_transmission_status>
-                        	    <purge_retryqueue translate="label">
-                            		<sort_order>8</sort_order>
-                            		<frontend_type>button</frontend_type>
-                            		<frontend_model>radial_payments/adminhtml_system_config_backend_purgeretryqueue</frontend_model>
-                            		<show_in_default>1</show_in_default>
-                            		<show_in_website>1</show_in_website>
-                            		<show_in_store>0</show_in_store>
-                        	    </purge_retryqueue>
-				    <payments_email translate="label">
-                            		<label>Payments Admin Email</label>
-					<comment>Comma Delineated List</comment>
-                            		<sort_order>9</sort_order>
-                            		<frontend_type>text</frontend_type>
-                            		<show_in_default>1</show_in_default>
-                            		<show_in_website>0</show_in_website>
-                            		<show_in_store>0</show_in_store>
-                        	    </payments_email>
-				    <responsetimeout translate="label">
-		                            <label>Payments Response Timeout</label>
-        		                    <comment>Time in milliseconds</comment>
-        		                    <sort_order>10</sort_order>
-                			    <frontend_type>text</frontend_type>
-                            		    <validate>validate-number</validate>
-                            		    <show_in_default>1</show_in_default>
-                            		    <show_in_website>1</show_in_website>
-                            		    <show_in_store>0</show_in_store>
-                        	    </responsetimeout>
-                            </fields>
-                        </payments>
-                </groups>
+                        </active>
+						<reconfirm_age translate="label">
+							<label>Reconfirm Age</label>
+							<frontend_type>text</frontend_type>
+							<sort_order>10</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+							<comment>In hours.</comment>
+						</reconfirm_age>
+					</fields>
+				</radial_invoicing>
+				<!-- EOF: Automated Invoicing -->
+			</groups>
         </radial_core>
     </sections>
 </config>

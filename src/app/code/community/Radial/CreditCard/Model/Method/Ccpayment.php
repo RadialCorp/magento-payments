@@ -35,6 +35,12 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     const INVALID_CARD_TYPE = 'Radial_CreditCard_Invalid_Card_Type';
     const SETTLEMENT_TYPE_CAPTURE = 'Debit';
     const SETTLEMENT_TYPE_REFUND = 'Credit';
+    const PAYMENT_RESPONSE_CODE_AVS = 'AVS';
+    const PAYMENT_RESPONSE_CODE_AVSCSC = 'AVSCSC';
+    const PAYMENT_RESPONSE_CODE_CSC = 'CSC';
+    const PAYMENT_RESPONSE_CODE_DECLF = 'DECLF';
+    const PAYMENT_RESPONSE_CODE_DECL = 'DECL';
+    const PAYMENT_RESPONSE_CODE_DECLR = 'DECLR';
     /**
      * Block type to use to render the payment method form.
      * @var string
@@ -355,7 +361,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setShipToMainDivision($shippingAddress->getRegionCode())
             ->setShipToCountryCode($shippingAddress->getCountry())
             ->setShipToPostalCode($shippingAddress->getPostcode())
-            ->setIsRequestToCorrectCVVOrAVSError($this->_getIsCorrectionNeededForPayment($payment));
+            ->setIsRequestToCorrectCVVOrAVSError($this->_getIsCorrectionNeededForPayment($payment))
+	    ->setSchemaVersion(1.1);
         return $this;
     }
     /**
@@ -365,23 +372,126 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     protected function _validateAuthResponse(Payload\Payment\ICreditCardAuthReply $response)
     {
-        // if auth was a complete success, accept the response and move on
-        if ($response->getIsAuthSuccessful()) {
+    	// if auth was a complete success or declined fraud, accept the response and move on
+        if ($response->getIsAuthSuccessful() || $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLR ) {
+            Mage::getSingleton('core/session')->setAVSCount(0);
+            Mage::getSingleton('core/session')->setDECLFCount(0);
+            Mage::getSingleton('core/session')->setDECLCount(0);
             return $this;
         }
-        // if AVS correction is needed, redirect to billing address step
-        if ($response->getIsAVSCorrectionRequired()) {
-            $this->_failPaymentRequest(self::CREDITCARD_AVS_FAILED_MESSAGE, 'billing');
+        if( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_AVSCSC )
+        {
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavscsc_error'), 'payment');
+        }
+        if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_AVS)
+        {
+	    // if AVS correction is needed, redirect to billing address step
+            $avsLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentavs');
+
+            if( $avsLimit === 0 )
+            {   
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }   
+
+            // Always fail if less than 0
+            if( $avsLimit < 0 )
+            {
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavs_error'), 'billing');
+            }
+
+            $prevAVS = Mage::getSingleton('core/session')->getAVSCount();
+
+            if( $prevAVS < $avsLimit )
+            {
+                $prevAVS++;
+                Mage::getSingleton('core/session')->setAVSCount($prevAVS);
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentavs_error'), 'billing');
+            } else {
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }
         }
         // if CVV correction is needed, redirect to payment method step
-        if ($response->getIsCVV2CorrectionRequired()) {
-            $this->_failPaymentRequest(self::CREDITCARD_CVV_FAILED_MESSAGE, 'payment');
+        if ($response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_CSC) {
+            $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentcsc_error'), 'payment');
         }
         // if AVS & CVV did not fail but was not a complete success, see if the
         // request is at least acceptable - timeout perhaps - and if so, take it
         // and allow order submit to continue
         if ($response->getIsAuthAcceptable()) {
+            Mage::getSingleton('core/session')->setAVSCount(0);
+            Mage::getSingleton('core/session')->setDECLFCount(0);
+            Mage::getSingleton('core/session')->setDECLCount(0);
             return $this;
+        }
+        if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECL )
+        {
+	    // DECL from Payment Response
+            $declLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdecl');
+            
+	    if( $declLimit === 0 )
+            {
+		Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+	    }
+
+	    if( $declLimit < 0 )
+	    {
+		// fail if less then 0
+		$this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdecl_error'), 'billing');
+	    }
+
+	    $prevDECL = Mage::getSingleton('core/session')->getDECLCount();
+            if( $prevDECL < $declLimit )
+            {
+            	$prevDECL++;
+		Mage::getSingleton('core/session')->setDECLCount($prevDECL);
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdecl_error'), 'billing');
+            } else {
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }
+        }
+        if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLF )
+        {
+	    // DECLF from Payment Response
+            $declfLimit = Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf');
+                
+	    if( $declfLimit === 0 )
+            {
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }
+
+            if( $declfLimit < 0 )
+            {
+                // fail if less then 0
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf_error'), 'billing');
+            }
+
+	    $prevDECLF = Mage::getSingleton('core/session')->getDECLFCount();
+            if( $prevDECLF < $declfLimit )
+            {
+                $prevDECLF++;
+                Mage::getSingleton('core/session')->setDECLFCount($prevDECLF);
+                $this->_failPaymentRequest(Mage::getStoreConfig('payment/radial_creditcard/paymentdeclf_error'), 'billing');
+            } else {
+                Mage::getSingleton('core/session')->setAVSCount(0);
+                Mage::getSingleton('core/session')->setDECLFCount(0);
+                Mage::getSingleton('core/session')->setDECLCount(0);
+                return $this;
+            }
         }
         // auth failed for some other reason, possibly declined, making it unacceptable
         // send user to payment step of checkout with an error message
@@ -432,6 +542,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             'tender_type' => $this->_helper->getTenderTypeForCcType($payment->getCcType()),
             'is_correction_required' => $correctionRequired,
             'last4_to_correct' => $correctionRequired ? $payment->getCcLast4() : null,
+	    'risk_response_code' => $response->getRiskResponseCode(),
         ])
             ->setAmountAuthorized($response->getAmountAuthorized())
             ->setBaseAmountAuthorized($response->getAmountAuthorized())
@@ -537,7 +648,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
         );
     }
-
     /**
      * Get the API SDK for the payment settlement request.
      * @param Mage_Sales_Model_Order_Creditmemo
@@ -554,7 +664,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
         );
     }
-
     /**
      * Get the API SDK for the payment auth cancel request.
      * @param Varien_Object $payment
@@ -567,6 +676,19 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $config->apiService,
             $config->apiAuthCancel,
             [$this->_helper->getTenderTypeForCcType($payment->getCcType())]
+        );
+    }
+    /**
+     * Get the API SDK for the payment pubkey request.
+     * @return Api\IBidirectionalApi
+     */
+    protected function _getPublickeyApi()
+    {
+        $config = $this->_helper->getConfigModel();
+        return $this->_getApi(
+            $config->apiService,
+            $config->apiPubkey,
+	    array() 
         );
     }
     /**
@@ -813,12 +935,13 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->getSession()->addNotice($errorMessage);
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
 
-	    $paymentsEmailA = explode(',', Mage::getStoreConfig('radial_core/payments/payments_email'));
-            if( !empty($paymentsEmailA) )
+	    $paymentsEmailProp = Mage::getStoreConfig('radial_core/payments/payments_email');
+            if( $paymentsEmailProp )
             {
-            	foreach( $paymentsEmailA as $paymentsEmail )
-                { 
-                	$paymentsName = Mage::app()->getStore()->getName() . ' - ' . 'Payments Admin';
+		$paymentsEmailA = explode(',', $paymentsEmailProp);
+                foreach( $paymentsEmailA as $paymentsEmail )
+                {
+                        $paymentsName = Mage::app()->getStore()->getName() . ' - ' . 'Payments Admin';
                         $emailTemplate  = Mage::getModel('core/email_template')->loadDefault('custom_email_template2');
 
                         //Create an array of variables to assign to template
@@ -826,7 +949,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         $emailTemplateVariables['myvar1'] = gmdate("Y-m-d\TH:i:s\Z");
                         $emailTemplateVariables['myvar2'] = $e->getMessage();
                         $emailTemplateVariables['myvar3'] = $e->getTraceAsString();
-                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedResponseXml);
+                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedRequestXml);
 
                         $processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
                         //Sending E-Mail to Payments Admin Email.
@@ -838,16 +961,17 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                                 ->setFromEmail(Mage::getStoreConfig('trans_email/ident_general/email'))
                                 ->setFromName($paymentsName)
                                 ->setType('html');
-                        try {
-                        	//Confimation E-Mail Send
+                        try 
+                        {
+                                //Confimation E-Mail Send
                                 $mail->send();
                         }
                         catch(Exception $error)
-                        { 
-                        	$logMessage = sprintf('[%s] Error Sending Email: %s', __CLASS__, $error->getMessage());
+                        {
+                                $logMessage = sprintf('[%s] Error Sending Email: %s', __CLASS__, $error->getMessage());
                                 Mage::log($logMessage, Zend_Log::ERR);
                         }
-                }
+                 }
             }
         }
         return $this;
@@ -984,6 +1108,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $this->_handleAuthCancelResponse($api, $payment);
         return $this;
     }
+
     /**
      * Refund the amount
      *
@@ -1018,7 +1143,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         parent::processCreditmemo($creditmemo, $payment);
         try {
             $api = $this->_getCreditmemoApi($creditmemo, $payment);
-            $this->_prepareCreditRequest($api, $creditmemo, $payment);
+	    $this->_prepareCreditRequest($api, $creditmemo, $payment);
             Mage::dispatchEvent('radial_creditcard_settlement_credit_request_send_before', [
                 'payload' => $api->getRequestBody(),
                 'creditmemo' => $creditmemo,
@@ -1039,12 +1164,12 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
             $this->_handleCreditResponse($api, $creditmemo, $payment);
         } catch (Exception $e) {
-       	    // settlement must be allowed to fail
-       	    // set creditmemo status as OPEN to trigger a retry and notify admin
-       	    $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
-	
+            // settlement must be allowed to fail
+            // set creditmemo status as OPEN to trigger a retry and notify admin
+            $creditmemo->setState(Mage_Sales_Model_Order_Creditmemo::STATE_OPEN);
+
 	    $retry = $creditmemo->getDeliveryStatus();
-      	    $retryN = $retry + 1;
+            $retryN = $retry + 1;
             $creditmemo->setDeliveryStatus($retryN);
             $creditmemo->save();
 
@@ -1052,9 +1177,10 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->getSession()->addNotice($errorMessage);
             $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
 
-	    $paymentsEmailA = explode(',', Mage::getStoreConfig('radial_core/payments/payments_email'));
-            if( !empty($paymentsEmailA) )
+	    $paymentsEmailProp = Mage::getStoreConfig('radial_core/payments/payments_email');
+            if( $paymentsEmailProp )
             {
+		$paymentsEmailA = explode(',', $paymentsEmailProp);
                 foreach( $paymentsEmailA as $paymentsEmail )
                 {
                         $paymentsName = Mage::app()->getStore()->getName() . ' - ' . 'Payments Admin';
@@ -1065,7 +1191,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                         $emailTemplateVariables['myvar1'] = gmdate("Y-m-d\TH:i:s\Z");
                         $emailTemplateVariables['myvar2'] = $e->getMessage();
                         $emailTemplateVariables['myvar3'] = $e->getTraceAsString();
-                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedResponseXml);
+                        $emailTemplateVariables['myvar4'] = htmlspecialchars($cleanedRequestXml);
 
                         $processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
                         //Sending E-Mail to Payments Admin Email.
@@ -1077,7 +1203,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                                 ->setFromEmail(Mage::getStoreConfig('trans_email/ident_general/email'))
                                 ->setFromName($paymentsName)
                                 ->setType('html');
-                        try {
+                        try 
+                        {
                                 //Confimation E-Mail Send
                                 $mail->send();
                         }
@@ -1086,7 +1213,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
                                 $logMessage = sprintf('[%s] Error Sending Email: %s', __CLASS__, $error->getMessage());
                                 Mage::log($logMessage, Zend_Log::ERR);
                         }
-                }
+                 }
             }
         }
         return $this;
@@ -1120,7 +1247,79 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setOrderId($order->getIncrementId());
         return $this;
     }
+    /**
+     * Cron Job to Check / Set Public Key for CSE
+     *
+     * @return self
+     */
+    public function cronPubkeysync()
+    {
+        try {
+            $api = $this->_getPublickeyApi();
+            $this->_preparePublicKeyRequest($api);
+            // Log the request instead of expecting the SDK to have logged it.
+            // Allows the data to be properly scrubbed of any PII or other sensitive
+            // data prior to writing the log files.
+            $logMessage = 'Sending CSE public key request for sync.';
+            $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
+            $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
+            $this->_sendRequest($api);
+            // Log the response instead of expecting the SDK to have logged it.
+            // Allows the data to be properly scrubbed of any PII or other sensitive
+            // data prior to writing the log files.
+            $logMessage = 'Received CSE public key request for sync.';
+            $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
+            $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
+            $this->_handlePublickeyResponse($api);
+        } catch (Exception $e) {
+            $errorMessage = $this->_helper->__(self::PUBLICKEY_FAILED_MESSAGE);
+            $this->getSession()->addNotice($errorMessage);
+            $this->_logger->logException($e, $this->_context->getMetaData(__CLASS__, [], $e));
+        }
+        return $this;
+    }
+    /**
+     * Fill out the request payload with public key data and update the API request
+     * body with the complete request.
+     * @param Api\IBidirectionalApi $api
+     * @return static
+     */
+    protected function _preparePublicKeyRequest(Api\IBidirectionalApi $api)
+    {
+	/** @var Payload\Payment\PublicKeyRequest $request */
+	$request = $api->getRequestBody();
+	$publicKeyAlgorithm = Mage::getStoreConfig('payment/radial_creditcard/encryption_key_algorithm');
+	$request->setAlgorithmVersion($publicKeyAlgorithm);
+	return $this;
+    }
+    /**
+     * Update public key CSE property with details of the confirm request and response. Validate
+     * that a successful response was received.
+     * @param Api\IBidirectionalApi $api
+     * @return self
+     */
+    protected function _handlePublicKeyResponse(Api\IBidirectionalApi $api)
+    {
+        /** @var Payload\Payment\PublicKeyReply $response */
+        $response = $api->getResponseBody();
+        return $this->_validatePublicKeyResponse($response);
+    }
+    /**
+     * Check for the response to be valid.
+     * @param Payload\Payment\IPublicKeyReply $response
+     * @return self
+     */
+    protected function _validatePublicKeyResponse(Payload\Payment\IPublicKeyReply $response)
+    {
+        // if auth was a complete success, accept the response and move on
+        if ($response->getPublicKey()) {
+            $trimPublicKey = preg_replace('~[\r\n]+~', '', $response->getPublicKey());
 
+            Mage::getModel('core/config')->saveConfig('payment/radial_creditcard/encryption_key', $trimPublicKey);
+            Mage::app()->cleanCache();
+	}
+        return $this;
+    }  
     /**
      * Retrieve adminhtml session model object
      * @return Mage_Adminhtml_Model_Session
