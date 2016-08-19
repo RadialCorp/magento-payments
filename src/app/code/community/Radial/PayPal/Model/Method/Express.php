@@ -226,8 +226,8 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                         {
                                 $logMessage = sprintf('[%s] Error Sending Email: %s', __CLASS__, $error->getMessage());
                                 Mage::log($logMessage, Zend_Log::ERR);
-                        }
-                 }
+			}
+                }
             }
         }
         return $this;
@@ -296,7 +296,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
                                 $logMessage = sprintf('[%s] Error Sending Email: %s', __CLASS__, $error->getMessage());
                                 Mage::log($logMessage, Zend_Log::ERR);
                         }
-                 }
+                }
             }
         }
         return $this;
