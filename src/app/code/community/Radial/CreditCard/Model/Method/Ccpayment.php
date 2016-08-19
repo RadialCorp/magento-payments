@@ -1110,40 +1110,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     }
 
     /**
-     * Void the payment
-     *
-     * @param Varien_Object $payment
-     * @return self
-     * @throws Mage_Core_Exception
-     */
-    public function cancel(Varien_Object $payment)
-    {
-	parent::cancel($payment);
-
-        $api = $this->_getAuthCancelApi($payment);
-        $this->_prepareAuthCancelRequest($api, $payment);
-        Mage::dispatchEvent('radial_creditcard_auth_cancel_request_send_before', [
-            'payload' => $api->getRequestBody(),
-            'payment' => $payment,
-        ]);
-        // Log the request instead of expecting the SDK to have logged it.
-        // Allows the data to be properly scrubbed of any PII or other sensitive
-        // data prior to writing the log files.
-        $logMessage = 'Sending credit card auth cancel request.';
-        $cleanedRequestXml = $this->_helper->cleanPaymentsXml($api->getRequestBody()->serialize());
-        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['request_body' => $cleanedRequestXml]));
-        $this->_sendRequest($api);
-        // Log the response instead of expecting the SDK to have logged it.
-        // Allows the data to be properly scrubbed of any PII or other sensitive
-        // data prior to writing the log files.
-        $logMessage = 'Received credit card auth cancel response.';
-        $cleanedResponseXml = $this->_helper->cleanPaymentsXml($api->getResponseBody()->serialize());
-        $this->_logger->debug($logMessage, $this->_context->getMetaData(__CLASS__, ['response_body' => $cleanedResponseXml]));
-        $this->_handleAuthCancelResponse($api, $payment);
-        return $this;
-    }
-
-    /**
      * Refund the amount
      *
      * @param Varien_Object $payment
