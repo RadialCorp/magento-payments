@@ -743,7 +743,8 @@ class Radial_Paypal_Model_Express_Api
     {
         if ($this->canIncludeLineItems($quote)) {
             $this->processLineItems($quote, $container->getLineItems())
-                ->processNegativeLineItems($quote, $container->getLineItems());
+                ->processNegativeLineItems($quote, $container->getLineItems())
+		->processGiftWrapLineItems($quote, $container->getLineItems());
             $container->calculateLineItemsTotal();
             $container->setShippingTotal($this->getTotal('shipping', $quote));
             
@@ -760,6 +761,51 @@ class Radial_Paypal_Model_Express_Api
 	    }
 
 	    $container->setCurrencyCode($quote->getQuoteCurrencyCode());
+        }
+    }
+
+    /**
+     * process gift wrap
+     *
+     * @param  Mage_Sales_Model_Quote
+     * @param  ILineItemIterable
+     * @return self
+     */
+    protected function processGiftWrapLineItems(Mage_Sales_Model_Quote $quote, ILineItemIterable $lineItems )
+    {
+        $currencyCode = $quote->getQuoteCurrencyCode();
+
+        foreach( $quote->getAllItems() as $quoteItem )
+        {
+                if( $quoteItem->getGwId() && $quoteItem->getGwPrice() )
+                {
+                        $giftWrap = Mage::getModel('enterprise_giftwrapping/wrapping')->load($quoteItem->getGwId());
+                        if ($giftWrap->getId()) {
+                                $giftQty = $quoteItem->getQty() ?: 1;
+
+                                $lineItem = $lineItems->getEmptyLineItem();
+                                $lineItem->setName($giftWrap->getDesign())
+                                         ->setSequenceNumber($giftWrap->getGwId())
+                                         ->setQuantity(1)
+                                         ->setUnitAmount($quoteItem->getGwPrice() * $giftQty)
+                                         ->setCurrencyCode($currencyCode);
+                                $lineItems->offsetSet($lineItem, null);
+                        }
+                }
+        }
+
+        if( $quote->getGwId() && $quote->getGwPrice() )
+        {
+                 $giftWrap = Mage::getModel('enterprise_giftwrapping/wrapping')->load($quote->getGwId());
+                 if ($giftWrap->getId()) {
+                        $lineItem = $lineItems->getEmptyLineItem();
+                        $lineItem->setName($giftWrap->getDesign())
+                                 ->setSequenceNumber($giftWrap->getGwId())
+                                 ->setQuantity(1)
+                                 ->setUnitAmount($giftWrap->getBasePrice())
+                                 ->setCurrencyCode($currencyCode);
+                        $lineItems->offsetSet($lineItem, null);
+                 }
         }
     }
 
