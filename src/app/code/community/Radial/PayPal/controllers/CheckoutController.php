@@ -109,11 +109,23 @@ class Radial_PayPal_CheckoutController extends Mage_Core_Controller_Front_Action
 
             try {
                 $buttonKey = Radial_PayPal_Model_Express_Checkout::PAYMENT_INFO_BUTTON;
-                $startReply = $this->_checkout->start(
-                    Mage::getUrl('*/*/return'),
-                    Mage::getUrl('*/*/cancel'),
-                    $this->getRequest()->getParam($buttonKey)
-                );
+		$buttonParam = $this->getRequest()->getParam($buttonKey);
+
+		if($buttonParam)
+		{
+                	$startReply = $this->_checkout->start(
+                	    Mage::getUrl('*/*/return'),
+                	    Mage::getUrl('*/*/cancel'),
+                	    $this->getRequest()->getParam($buttonKey)
+                	);
+		} else {
+			$startReply = $this->_checkout->start(
+                            Mage::getUrl('*/*/placeOrder'),
+                            Mage::getUrl('*/*/cancel'),
+                            $this->getRequest()->getParam($buttonKey)
+                        );
+			$startReply['useraction'] = "commit";
+		}
                 $this->_initToken($startReply['token']);
                 $this->_redirectToPayPalSite($startReply);
                 return;
@@ -359,8 +371,10 @@ class Radial_PayPal_CheckoutController extends Mage_Core_Controller_Front_Action
                 }
             }
 
+	    $payerId = $this->getRequest()->getParam("PayerID");
+
             $this->_initCheckout();
-            $this->_checkout->place($this->_initToken());
+            $this->_checkout->place($this->_initToken(),'',$payerId);
 
             // prepare session to success or cancellation page
             $session = $this->_getCheckoutSession();

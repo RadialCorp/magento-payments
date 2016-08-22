@@ -394,7 +394,7 @@ class Radial_PayPal_Model_Express_Checkout
      * @param string $token
      * @param string $shippingMethodCode
      */
-    public function place($token, $shippingMethodCode = null)
+    public function place($token, $shippingMethodCode = null, $payerID = null)
     {
         $this->updateShippingMethod($shippingMethodCode);
         $isNewCustomer = $this->_prepareQuote();
@@ -404,6 +404,12 @@ class Radial_PayPal_Model_Express_Checkout
         $payerId = $this->_quote->getPayment()->getAdditionalInformation(
             self::PAYMENT_INFO_PAYER_ID
         );
+	
+	if(!$payerId)
+	{
+		$payerId = $payerID;
+	}
+
         $doExpressReply = $this->_api->doExpressCheckout(
             $this->_quote,
             $token,
