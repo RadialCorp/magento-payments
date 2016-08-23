@@ -404,7 +404,7 @@ class Radial_PayPal_Model_Express_Checkout
         $payerId = $this->_quote->getPayment()->getAdditionalInformation(
             self::PAYMENT_INFO_PAYER_ID
         );
-	$(!$payerId)
+	if(!$payerId)
 	{	
 		$payerId = $payerID;
 	}
