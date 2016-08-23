@@ -119,12 +119,21 @@ class Radial_PayPal_CheckoutController extends Mage_Core_Controller_Front_Action
                 	    $this->getRequest()->getParam($buttonKey)
                 	);
 		} else {
-			$startReply = $this->_checkout->start(
-                            Mage::getUrl('*/*/placeOrder'),
-                            Mage::getUrl('*/*/cancel'),
-                            $this->getRequest()->getParam($buttonKey)
-                        );
-			$startReply['useraction'] = "commit";
+			if( Mage::getStoreConfig("radial_paypal/general/skip_review_page"))
+			{
+				$startReply = $this->_checkout->start(
+                        	    Mage::getUrl('*/*/placeOrder'),
+                       		    Mage::getUrl('*/*/cancel'),
+                        	    $this->getRequest()->getParam($buttonKey)
+                        	);
+				$startReply['useraction'] = "commit";
+			} else {
+				$startReply = $this->_checkout->start(
+                        	    Mage::getUrl('*/*/return'),
+                        	    Mage::getUrl('*/*/cancel'),
+                        	    $this->getRequest()->getParam($buttonKey)
+                        	);
+			}
 		}
                 $this->_initToken($startReply['token']);
                 $this->_redirectToPayPalSite($startReply);
