@@ -126,6 +126,7 @@ http://opensource.org/licenses/osl-3.0.php
                 <logo_type>wePrefer_150x60</logo_type>
                 <payment_mark_size/>
                 <transfer_lines>1</transfer_lines>
+		<skip_review_page>1</skip_review_page>
             </general>
             <api>
                 <service>payments</service>
