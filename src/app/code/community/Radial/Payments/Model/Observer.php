@@ -81,4 +81,116 @@ class Radial_Payments_Model_Observer
 	}
 	$payment->getMethodInstance()->cancel($payment);
     }
+
+    public function transferRemainingGwPrices(Varien_Event_Observer $observer)
+    {
+    	$_invoice = $observer->getEvent()->getInvoice();
+	$_order = $_invoice->getOrder();
+
+	if ($_invoice->getUpdatedAt() == $_invoice->getCreatedAt()) 
+	{
+		foreach( $_invoice->getAllItems() as $invoiceItem )
+		{
+			$itemC = Mage::getModel('sales/order_item')->getCollection()
+                                        ->addFieldToFilter('item_id', array('eq' => $invoiceItem->getOrderItemId()));
+
+			if( $itemC->getSize() > 0 )
+			{
+				$item = $itemC->getFirstItem();
+				$gwPrice = $item->getGwPrice();
+				$gwTax = $item->getGwTaxAmount();
+				 
+				$invoiceQty = $invoiceItem->getQty();
+
+				$gwItemsP += $gwPrice * $invoiceQty;
+				$gwItemsTaxP += $gwTax * $invoiceQty;
+			}
+		}
+		
+		if( !$_invoice->getGwPrice() )
+		{
+			$prevSubtotal = $_invoice->getSubtotal();
+			$prevGrandtotal = $_invoice->getGrandTotal();
+			$prevSubtotalTax = $_invoice->getSubtotalInclTax();
+
+			// Somehow GW Tax is Being Added In to Subtotal, so subtract.
+			$_invoice->setData('subtotal_incl_tax', $prevSubtotalTax - $gwItemsTaxP);
+			$_invoice->setData('base_subtotal_incl_tax', $prevSubtotalTax - $gwItemsTaxP);
+
+			$_invoice->setData('gw_items_price', $gwItemsP);
+                	$_invoice->setData('gw_items_base_price', $gwItemsP);
+                	$_invoice->setData('gw_items_base_tax_amount', $gwItemsTaxP);
+                	$_invoice->setData('gw_items_tax_amount', $gwItemsTaxP);
+			$_invoice->setData('grand_total', $prevGrandtotal + $gwItemsP);
+			$_invoice->setData('base_grand_total', $prevGrandtotal + $gwItemsP);
+
+                	$_invoice->getResource()->saveAttribute($_invoice, 'gw_items_price');
+                	$_invoice->getResource()->saveAttribute($_invoice, 'gw_items_base_price');
+                	$_invoice->getResource()->saveAttribute($_invoice, 'gw_items_base_tax_amount');
+                	$_invoice->getResource()->saveAttribute($_invoice, 'gw_items_tax_amount');
+			$_invoice->getResource()->saveAttribute($_invoice, 'grand_total');
+			$_invoice->getResource()->saveAttribute($_invoice, 'base_grand_total');
+		} else {
+			$prevGrandtotal = $_invoice->getGrandTotal();
+			$_invoice->setData('base_grand_total', $prevGrandtotal);
+			$_invoice->getResource()->saveAttribute($_invoice, 'base_grand_total');
+		}
+	}
+    }
+
+    public function transferRemainingGwPricesCreditMemo(Varien_Event_Observer $observer)
+    {
+        $_creditmemo = $observer->getEvent()->getCreditmemo();
+        $_order = $_creditmemo->getOrder();
+
+        if ($_creditmemo->getUpdatedAt() == $_creditmemo->getCreatedAt())
+        {
+        	foreach( $_creditmemo->getAllItems() as $creditmemoItem )
+                {
+                        $itemC = Mage::getModel('sales/order_item')->getCollection()
+                                        ->addFieldToFilter('item_id', array('eq' => $creditmemoItem->getOrderItemId()));
+
+                        if( $itemC->getSize() > 0 )
+                        {
+                                $item = $itemC->getFirstItem();
+                                $gwPrice = $item->getGwPrice();
+                                $gwTax = $item->getGwTaxAmount();
+
+                                $creditmemoQty = $creditmemoItem->getQty();
+
+                                $gwItemsP += $gwPrice * $creditmemoQty;
+                                $gwItemsTaxP += $gwTax * $creditmemoQty;
+                        }
+                }
+
+                if( !$_creditmemo->getGwPrice() )
+                {
+                        $prevSubtotal = $_creditmemo->getSubtotal();
+                        $prevGrandtotal = $_creditmemo->getGrandTotal();
+                        $prevSubtotalTax = $_creditmemo->getSubtotalInclTax();
+
+                        // Somehow GW Tax is Being Added In to Subtotal, so subtract.
+                        $_creditmemo->setData('subtotal_incl_tax', $prevSubtotalTax - $gwItemsTaxP);
+                        $_creditmemo->setData('base_subtotal_incl_tax', $prevSubtotalTax - $gwItemsTaxP);
+
+                        $_creditmemo->setData('gw_items_price', $gwItemsP);
+                        $_creditmemo->setData('gw_items_base_price', $gwItemsP);
+                        $_creditmemo->setData('gw_items_base_tax_amount', $gwItemsTaxP);
+                        $_creditmemo->setData('gw_items_tax_amount', $gwItemsTaxP);
+                        $_creditmemo->setData('grand_total', $prevGrandtotal + $gwItemsP);
+                        $_creditmemo->setData('base_grand_total', $prevGrandtotal + $gwItemsP);
+
+                        $_creditmemo->getResource()->saveAttribute($_creditmemo, 'gw_items_price');
+                        $_creditmemo->getResource()->saveAttribute($_creditmemo, 'gw_items_base_price');
+                        $_creditmemo->getResource()->saveAttribute($_creditmemo, 'gw_items_base_tax_amount');
+                        $_creditmemo->getResource()->saveAttribute($_creditmemo, 'gw_items_tax_amount');
+                        $_creditmemo->getResource()->saveAttribute($_creditmemo, 'grand_total');
+                        $_creditmemo->getResource()->saveAttribute($_creditmemo, 'base_grand_total');
+                } else {
+                        $prevGrandtotal = $_creditmemo->getGrandTotal();
+                        $_creditmemo->setData('base_grand_total', $prevGrandtotal);
+                        $_creditmemo->getResource()->saveAttribute($_creditmemo, 'base_grand_total');
+                }
+	}
+    }
 }
