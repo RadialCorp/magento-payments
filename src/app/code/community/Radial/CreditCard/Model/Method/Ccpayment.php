@@ -105,7 +105,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected $_helper;
     /** @var Radial_Core_Helper_Data */
     protected $_coreHelper;
-    /** @var Mage_Core_Helper_Http */
+    /** @var Radial_Core_Helper_Http */
     protected $_httpHelper;
     /** @var Radial_Payments_Helper_Data */
     protected $_paymentsHelper;
@@ -125,7 +125,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * @param array $initParams May contain:
      *                          -  'helper' => Radial_CreditCard_Helper_Data
      *                          -  'core_helper' => Radial_Core_Helper_Data
-     *                          -  'http_helper' => Mage_Core_Helper_Http
+     *                          -  'http_helper' => Radial_Core_Helper_Http
      *                          -  'payments_helper' => Radial_Payments_Helper_Data
      *                          -  'logger' => EbayEnterprise_MageLog_Helper_Data
      *                          -  'context' => EbayEnterprise_MageLog_Helper_Context
@@ -144,7 +144,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         ) = $this->_checkTypes(
             $this->_nullCoalesce($initParams, 'helper', Mage::helper('radial_creditcard')),
             $this->_nullCoalesce($initParams, 'core_helper', Mage::helper('radial_core')),
-            $this->_nullCoalesce($initParams, 'http_helper', Mage::helper('core/http')),
+            $this->_nullCoalesce($initParams, 'http_helper', Mage::helper('radial_core/http')),
             $this->_nullCoalesce($initParams, 'payments_helper', Mage::helper('radial_payments')),
             $this->_nullCoalesce($initParams, 'logger', Mage::helper('ebayenterprise_magelog')),
             $this->_nullCoalesce($initParams, 'context', Mage::helper('ebayenterprise_magelog/context')),
@@ -155,7 +155,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      * Type hinting for self::__construct $initParams
      * @param Radial_CreditCard_Helper_Data
      * @param Radial_Core_Helper_Data
-     * @param Mage_Core_Helper_Http
+     * @param Radial_Core_Helper_Http
      * @param Radial_Payments_Helper_Data
      * @param Mage_Checkout_Model_Session
      * @param EbayEnterprise_MageLog_Helper_Data
@@ -166,7 +166,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected function _checkTypes(
         Radial_CreditCard_Helper_Data $helper,
         Radial_Core_Helper_Data $coreHelper,
-        Mage_Core_Helper_Http $httpHelper,
+        Radial_Core_Helper_Http $httpHelper,
         Radial_Payments_Helper_Data $paymentsHelper,
         EbayEnterprise_MageLog_Helper_Data $logger,
         EbayEnterprise_MageLog_Helper_Context $context,
