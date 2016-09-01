@@ -19,6 +19,15 @@ http://opensource.org/licenses/osl-3.0.php
                 <script>radial_creditcard/braintree.js</script>
                 <params>integrity="YjI3YWM3OTkwNWMxODFkYzRiZjhlOTU2ODJhODE1YzZmMGJiYmNiYmQzNTg0Yjk5NjA5ZGNmNWJhZmFmYzJmMw"</params>
             </action>
+	    <block type="core/text" name="radial.creditcard.newmcbin.validation">
+                <action method="setText">
+                    <text>
+                        <![CDATA[<script type="text/javascript">
+                            Validation.creditCartTypes.set('MC', [new RegExp('^5[1-5][0-9]{14}$|^(222[1-8][0-9]{2}|2229[0-8][0-9]|22299[0-9]|22[3-9][0-9]{3}|2[3-6][0-9]{4}|27[01][0-9]{3}|2720[0-8][0-9]|27209[0-9])[0-9]{10}'), new RegExp('^[0-9]{3}$'), true]);
+                        </script>]]>
+                    </text>
+                </action>
+            </block>
         </reference>
     </adminhtml_sales_order_create_index>
 </layout>
