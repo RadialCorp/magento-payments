@@ -19,6 +19,8 @@ http://opensource.org/licenses/osl-3.0.php
                 <script>radial_creditcard/braintree.js</script>
                 <params>integrity="sha512-P7ebM59vnkCjMv+1yWCyxGEGfYq4fWBPdCn/7u0FuduKDZLqIIY7UbLPZN0JGlIpzw1atXcM6bJ9eSNWrnuEYg=="</params>
             </action>
+	</reference>
+	<reference name="before_body_end">
 	    <block type="core/text" name="radial.creditcard.newmcbin.validation">
                 <action method="setText">
                     <text>
