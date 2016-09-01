@@ -17,6 +17,7 @@ http://opensource.org/licenses/osl-3.0.php
         <reference name="head">
             <action method="addJs">
                 <script>radial_creditcard/braintree.js</script>
+		<params>integrity="sha512-P7ebM59vnkCjMv+1yWCyxGEGfYq4fWBPdCn/7u0FuduKDZLqIIY7UbLPZN0JGlIpzw1atXcM6bJ9eSNWrnuEYg=="</params>
             </action>
 	    <block type="core/text" name="radial.creditcard.newmcbin.validation">
                 <action method="setText">
@@ -33,6 +34,7 @@ http://opensource.org/licenses/osl-3.0.php
         <reference name="head">
             <action method="addJs">
                 <script>radial_creditcard/braintree.js</script>
+		<params>integrity="sha512-P7ebM59vnkCjMv+1yWCyxGEGfYq4fWBPdCn/7u0FuduKDZLqIIY7UbLPZN0JGlIpzw1atXcM6bJ9eSNWrnuEYg=="</params>
             </action>
 	    <block type="core/text" name="radial.creditcard.newmcbin.validation">
                 <action method="setText">
