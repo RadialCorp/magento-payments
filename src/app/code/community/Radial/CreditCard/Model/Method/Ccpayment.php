@@ -138,7 +138,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         ) = $this->_checkTypes(
             $this->_nullCoalesce($initParams, 'helper', Mage::helper('radial_creditcard')),
             $this->_nullCoalesce($initParams, 'core_helper', Mage::helper('radial_core')),
-            $this->_nullCoalesce($initParams, 'http_helper', Mage::helper('core/http')),
+            $this->_nullCoalesce($initParams, 'http_helper', Mage::helper('radial_core/http')),
             $this->_nullCoalesce($initParams, 'payments_helper', Mage::helper('radial_payments')),
             $this->_nullCoalesce($initParams, 'logger', Mage::helper('ebayenterprise_magelog')),
             $this->_nullCoalesce($initParams, 'context', Mage::helper('ebayenterprise_magelog/context')),
