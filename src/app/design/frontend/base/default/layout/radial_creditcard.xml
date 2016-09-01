@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-Copyright (c) 2013-2014 eBay Enterprise, Inc.
+Copyright (c) 2013-2016 Radial Commerce, Inc.
 
 NOTICE OF LICENSE
 
@@ -9,22 +9,42 @@ that is bundled with this package in the file LICENSE.md.
 It is also available through the world-wide-web at this URL:
 http://opensource.org/licenses/osl-3.0.php
 
-@copyright   Copyright (c) 2013-2014 eBay Enterprise, Inc. (http://www.ebayenterprise.com/)
+@copyright   Copyright (c) 2013-2016 Radial Commerce, Inc. (http://www.ebayenterprise.com/)
 @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 -->
-<layout version="0.1.0">
+<layout version="0.1.1">
     <checkout_onepage_index>
         <reference name="head">
             <action method="addJs">
                 <script>radial_creditcard/braintree-2.27.0.min.js</script>
+                <params>integrity="sha512-lLzeGPN2GKY58w824Ens6Q2xfpWOCQrsMWxuM6apmIeFtakau0EPIFNqTrfKVCaI/HRjv+QfUAunXaXbeFDkOg=="</params>
             </action>
+	    <block type="core/text" name="radial.creditcard.newmcbin.validation">
+                <action method="setText">
+                    <text>
+                        <![CDATA[<script type="text/javascript">
+                            Validation.creditCartTypes.set('MC', [new RegExp('^5[1-5][0-9]{14}$|^(222[1-8][0-9]{2}|2229[0-8][0-9]|22299[0-9]|22[3-9][0-9]{3}|2[3-6][0-9]{4}|27[01][0-9]{3}|2720[0-8][0-9]|27209[0-9])[0-9]{10}'), new RegExp('^[0-9]{3}$'), true]);
+                        </script>]]>
+                    </text>
+                </action>
+            </block>
         </reference>
     </checkout_onepage_index>
     <checkout_multishipping>
         <reference name="head">
             <action method="addJs">
                 <script>radial_creditcard/braintree-2.27.0.min.js</script>
+                <params>integrity="sha512-lLzeGPN2GKY58w824Ens6Q2xfpWOCQrsMWxuM6apmIeFtakau0EPIFNqTrfKVCaI/HRjv+QfUAunXaXbeFDkOg=="</params>
             </action>
-        </reference>
+            <block type="core/text" name="radial.creditcard.newmcbin.validation">
+                <action method="setText">
+                    <text>
+                        <![CDATA[<script type="text/javascript">
+                            Validation.creditCartTypes.set('MC', [new RegExp('^5[1-5][0-9]{14}$|^(222[1-8][0-9]{2}|2229[0-8][0-9]|22299[0-9]|22[3-9][0-9]{3}|2[3-6][0-9]{4}|27[01][0-9]{3}|2720[0-8][0-9]|27209[0-9])[0-9]{10}'), new RegExp('^[0-9]{3}$'), true]);
+                        </script>]]>
+                    </text>
+                </action>
+            </block>
+	</reference>
     </checkout_multishipping>
-</layout>
+<layout>
