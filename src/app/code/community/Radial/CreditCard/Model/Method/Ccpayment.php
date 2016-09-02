@@ -232,7 +232,64 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     {
         // card type can and should always be validated as data is not encrypted
         $this->_validateCardType();
-        return $this->_validateWithEncryptedCardData();
+
+	$errorMsg = false;
+	$ccType = '';
+	$info = $this->getInfoInstance();
+        if (strcmp($info->getCcType(), "MC") === 0 && !$this->_isUsingClientSideEncryption){
+		//BIN Change for MC 
+		/**
+                 * to validate payment method is allowed for billing country or not
+                 */
+                $paymentInfo = $this->getInfoInstance();
+         	if ($paymentInfo instanceof Mage_Sales_Model_Order_Payment) {
+         	    $billingCountry = $paymentInfo->getOrder()->getBillingAddress()->getCountryId();
+         	} else {
+         	    $billingCountry = $paymentInfo->getQuote()->getBillingAddress()->getCountryId();
+         	}
+         	if (!$this->canUseForCountry($billingCountry)) {
+         	    Mage::throwException(Mage::helper('payment')->__('Selected payment type is not allowed for billing country.'));
+         	}
+	
+		$hashMC = '/^5[1-5][0-9]{14}$|^(222[1-8][0-9]{2}|2229[0-8][0-9]|22299[0-9]|22[3-9][0-9]{3}|2[3-6][0-9]{4}|27[01][0-9]{3}|2720[0-8][0-9]|27209[0-9])[0-9]{10}/';
+
+		$ccNumber = $info->getCcNumber();
+                // remove credit card number delimiters such as "-" and space
+                $ccNumber = preg_replace('/[\-\s]+/', '', $ccNumber);
+
+		if (!preg_match($hashMC, $ccNumber)) {
+                        $errorMsg = Mage::helper('payment')->__('Credit card number mismatch with credit card type.');
+                }	
+
+		//validate credit card verification number
+        	if ($errorMsg === false && $this->hasVerification()) {
+        		$verifcationRegEx = $this->getVerificationRegEx();
+            		$regExp = isset($verifcationRegEx[$info->getCcType()]) ? $verifcationRegEx[$info->getCcType()] : '';
+       			
+			if (!$info->getCcCid() || !$regExp || !preg_match($regExp ,$info->getCcCid())){
+                		$errorMsg = Mage::helper('payment')->__('Please enter a valid credit card verification number.');
+            		}
+        	}
+
+		if ($ccType != 'SS' && !$this->_validateExpDate($info->getCcExpYear(), $info->getCcExpMonth())) {
+	            $errorMsg = Mage::helper('payment')->__('Incorrect credit card expiration date.');
+	        }
+
+	        if($errorMsg){
+	            Mage::throwException($errorMsg);
+	        }
+
+	        //This must be after all validation conditions
+	        if ($this->getIsCentinelValidationEnabled()) {
+	            $this->getCentinelValidator()->validate($this->getCentinelValidationData());
+	        }
+
+		return $this;
+        } elseif ($this->_isUsingClientSideEncryption) {
+            return $this->_validateWithEncryptedCardData();
+        } else {
+            return parent::validate();
+        }
     }
     /**
      * Validate what data can still be validated.
