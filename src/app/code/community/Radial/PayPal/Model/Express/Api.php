@@ -389,6 +389,7 @@ class Radial_Paypal_Model_Express_Api
         $useAddressOverride = $this->useAddressOverride($quote);
         $payload->setAddressOverride($useAddressOverride);
         if ($useAddressOverride) {
+	    $payload->setShipToName($quote->getShippingAddress()->getName());
             $this->addShippingAddress($quote->getShippingAddress(), $payload);
         }
 
@@ -508,6 +509,7 @@ class Radial_Paypal_Model_Express_Api
             ->setAmount($this->getTotal('grand_total', $quote));
         /** @var Mage_Sales_Model_Quote_Address $shippingAddress */
         $shippingAddress = $quote->getIsVirtual() ? $quote->getBillingAddress() : $quote->getShippingAddress();
+	$payload->setShipToName($shippingAddress->getName());
         $this->addShippingAddress($shippingAddress, $payload);
         if ($pickUpStoreId) {
             $payload->setPickUpStoreId($pickUpStoreId);
