@@ -247,38 +247,45 @@ class Radial_PayPal_Model_Express_Checkout
         /* Always import shipping address. We would have passed the shipping address in to begin with, so they
 			can keep it that way at PayPal if they like - or choose their own registered shipping address at PayPal. */
         $paypalShippingAddress = $getExpressCheckoutReply['shipping_address'];
+
+	// Import billing address if we are here via Button - which is to say we didn't have a billing address yet:
+        $portBillingFromShipping
+            = $quote->getPayment()->getAdditionalInformation(
+                self::PAYMENT_INFO_BUTTON
+            )
+            && !$quote->isVirtual();
+
         if (!$quote->getIsVirtual()) {
             $shippingAddress = $quote->getShippingAddress();
-            $shippingAddress->setTelephone($getExpressCheckoutReply['phone']);
             $shippingAddress->setStreet($paypalShippingAddress['street']);
             $shippingAddress->setCity($paypalShippingAddress['city']);
             $shippingAddress->setPostcode($paypalShippingAddress['postcode']);
             $shippingAddress->setCountryId($paypalShippingAddress['country_id']);
             // Region must be processed after country id is set for the lookup to work.
             $this->regionHelper->setQuoteAddressRegion($shippingAddress, $paypalShippingAddress['region_code']);
-            $shippingAddress->setPrefix(null);
 
-            $shippingAddress->setMiddlename(
-                $getExpressCheckoutReply['middlename']
-            );
-            $shippingAddress->setLastname($getExpressCheckoutReply['lastname']);
-            $shippingAddress->setFirstname(
-                $getExpressCheckoutReply['firstname']
-            );
-            $shippingAddress->setSuffix($getExpressCheckoutReply['suffix']);
-            $shippingAddress->setCollectShippingRates(true);
-            $shippingAddress->setSameAsBilling(0);
+            if( $portBillingFromShipping )
+	    {
+            	$shippingAddress->setPrefix(null);
+
+            	$shippingAddress->setMiddlename(
+            	    $getExpressCheckoutReply['middlename']
+            	);
+            	$shippingAddress->setLastname($getExpressCheckoutReply['lastname']);
+            	$shippingAddress->setFirstname(
+            	    $getExpressCheckoutReply['firstname']
+            	);
+            	$shippingAddress->setSuffix($getExpressCheckoutReply['suffix']);
+            	$shippingAddress->setCollectShippingRates(true);
+            	$shippingAddress->setSameAsBilling(0);
+
+		$shippingAddress->setTelephone($getExpressCheckoutReply['phone']);
+            }
             $quote->setShippingAddress($shippingAddress);
             $quote->setCustomerFirstname($getExpressCheckoutReply['firstname']);
             $quote->setCustomerLastname($getExpressCheckoutReply['lastname']);
         }
 
-        // Import billing address if we are here via Button - which is to say we didn't have a billing address yet:
-        $portBillingFromShipping
-            = $quote->getPayment()->getAdditionalInformation(
-                self::PAYMENT_INFO_BUTTON
-            )
-            && !$quote->isVirtual();
         if ($portBillingFromShipping) {
             $billingAddress = clone $shippingAddress;
             $billingAddress->unsAddressId()->unsAddressType();
