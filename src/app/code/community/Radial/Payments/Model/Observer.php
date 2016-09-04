@@ -51,6 +51,14 @@ class Radial_Payments_Model_Observer
         )->process();
     }
 
+    public function handlePaymentAuthCancelStatusEvent(Varien_Event_Observer $observer)
+    {
+	Mage::getModel(
+            'radial_payments/events_authCancel',
+            ['payload' => $observer->getEvent()->getPayload()]
+        )->process();
+    }
+
     public function processOrderCancel(Varien_Event_Observer $observer)
     {
 	$payment = $observer->getEvent()->getPayment();
