@@ -101,6 +101,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     protected $_canSaveCc = true;
 
+    /** @var bool */
+    protected $_isUsingClientSideEncryption;
     /** @var Radial_CreditCard_Helper_Data */
     protected $_helper;
     /** @var Radial_Core_Helper_Data */
@@ -150,6 +152,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             $this->_nullCoalesce($initParams, 'context', Mage::helper('ebayenterprise_magelog/context')),
             $this->_nullCoalesce($initParams, 'api_logger', Mage::helper('ebayenterprise_magelog'))
         );
+
+	$this->_isUsingClientSideEncryption = 1;
     }
     /**
      * Type hinting for self::__construct $initParams
