@@ -13,7 +13,7 @@
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-use eBayEnterprise\RetailOrderManagement\Payload\OrderEvents\IAuthCancel;
+use eBayEnterprise\RetailOrderManagement\Payload\OrderEvents\IPaymentAuthCancelReply;
 
 class Radial_Payments_Model_Events_AuthCancel
 {
@@ -43,14 +43,14 @@ class Radial_Payments_Model_Events_AuthCancel
 
     /**
      * Type hinting for self::__construct $initParams
-     * @param  IAuthCancel
+     * @param  IPaymentAuthCancelReply
      * @param  Mage_Core_Helper_Data
      * @param  EbayEnterprise_MageLog_Helper_Data
      * @param  EbayEnterprise_MageLog_Helper_Context
      * @return array
      */
     protected function checkTypes(
-        IAuthCancel $payload,
+        IPaymentAuthCancelReply $payload,
         Mage_Core_Helper_Data $helper,
         EbayEnterprise_MageLog_Helper_Data $logger,
         EbayEnterprise_MageLog_Helper_Context $context
