@@ -64,7 +64,7 @@ class Radial_Payments_Model_Observer
 		$qtyInvoiced += $orderItem->getQtyInvoiced();
 		$orderItemArray[$orderItem->getId()] = 0;
 	}
-	if( (int)$qtyOrdered - (int)$qtyInvoiced !== 0 )
+	if( (int)$qtyOrdered - (int)$qtyInvoiced !== 0 && (int)$qtyInvoiced !== 0 )
 	{
 		//MPTF-143 create a 0.00 invoice and process it, if the order has been partially invoiced and canceled.
 		/** @var Mage_Sales_Model_Service_Order $orderService */
