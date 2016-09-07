@@ -255,6 +255,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
          	}
 	
 		$hashMC = '/^5[1-5][0-9]{14}$|^(222[1-8][0-9]{2}|2229[0-8][0-9]|22299[0-9]|22[3-9][0-9]{3}|2[3-6][0-9]{4}|27[01][0-9]{3}|2720[0-8][0-9]|27209[0-9])[0-9]{10}/';
+		$hashMCCVV = '/^[0-9]{3}$|^[0-9]{4}$/';
 
 		$ccNumber = $info->getCcNumber();
                 // remove credit card number delimiters such as "-" and space
@@ -269,7 +270,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         		$verifcationRegEx = $this->getVerificationRegEx();
             		$regExp = isset($verifcationRegEx[$info->getCcType()]) ? $verifcationRegEx[$info->getCcType()] : '';
        			
-			if (!$info->getCcCid() || !$regExp || !preg_match($regExp ,$info->getCcCid())){
+			if (!$info->getCcCid() || !preg_match($hashMCCVV ,$info->getCcCid())){
                 		$errorMsg = Mage::helper('payment')->__('Please enter a valid credit card verification number.');
             		}
         	}
