@@ -71,6 +71,11 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected $_canRefund               = true;
 
     /**
+     * Can refund partial qty online?
+     */
+    protected $_canRefundInvoicePartial = true;
+
+    /**
      * Can void transactions online?
      */
     protected $_canVoid                 = false;
