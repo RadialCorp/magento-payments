@@ -267,9 +267,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
 
 		//validate credit card verification number
         	if ($errorMsg === false && $this->hasVerification()) {
-        		$verifcationRegEx = $this->getVerificationRegEx();
-            		$regExp = isset($verifcationRegEx[$info->getCcType()]) ? $verifcationRegEx[$info->getCcType()] : '';
-       			
 			if (!$info->getCcCid() || !preg_match($hashMCCVV ,$info->getCcCid())){
                 		$errorMsg = Mage::helper('payment')->__('Please enter a valid credit card verification number.');
             		}
