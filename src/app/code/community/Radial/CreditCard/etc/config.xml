@@ -90,6 +90,7 @@ http://opensource.org/licenses/osl-3.0.php
                 <operation_capture>settlement/create</operation_capture>
                 <operation_cancel>auth/cancel</operation_cancel>
             </api>
+	    <braintree_filename>braintree.js</braintree_filename>
         </radial_creditcard>
     </default>
     <phpunit>
