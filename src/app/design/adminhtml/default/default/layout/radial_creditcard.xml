@@ -15,10 +15,7 @@ http://opensource.org/licenses/osl-3.0.php
 <layout version="0.1.1">
     <adminhtml_sales_order_create_index>
         <reference name="head">
-            <action method="addJs">
-                <script>radial_creditcard/braintree-2.27.0.min.js</script>
-                <params>integrity="sha512-lLzeGPN2GKY58w824Ens6Q2xfpWOCQrsMWxuM6apmIeFtakau0EPIFNqTrfKVCaI/HRjv+QfUAunXaXbeFDkOg=="</params>
-            </action>
+		<block type="radial_creditcard/braintree" name="radial.creditcard.braintree" template="radial_creditcard/braintree.phtml" />
 	</reference>
 	<reference name="before_body_end">
 	    <block type="core/text" name="radial.creditcard.newmcbin.validation">

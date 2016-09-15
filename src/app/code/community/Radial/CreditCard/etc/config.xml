@@ -100,6 +100,7 @@ http://opensource.org/licenses/osl-3.0.php
                 <operation_cancel>auth/cancel</operation_cancel>
 		<operation_pubkey>publickey/lookup</operation_pubkey>
             </api>
+	    <braintree_filename>braintree-2.27.0.min.js</braintree_filename>
         </radial_creditcard>
     </default>
     <phpunit>
