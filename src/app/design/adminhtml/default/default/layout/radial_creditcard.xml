@@ -14,10 +14,8 @@ http://opensource.org/licenses/osl-3.0.php
 -->
 <layout version="0.1.1">
     <adminhtml_sales_order_create_index>
-        <reference name="head">
-	    <block type="radial_creditcard/braintree" name="radial.creditcard.braintree" template="radial_creditcard/braintree.phtml" />
-	</reference>
 	<reference name="before_body_end">
+	    <block type="radial_creditcard/braintree" name="radial.creditcard.braintree" template="radial_creditcard/braintree.phtml" />
 	    <block type="core/text" name="radial.creditcard.newmcbin.validation">
                 <action method="setText">
                     <text>
