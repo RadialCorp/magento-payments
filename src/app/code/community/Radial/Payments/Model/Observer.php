@@ -124,8 +124,8 @@ class Radial_Payments_Model_Observer
 
 				$invoiceQty = $invoiceItem->getQty();
 
-				$gwItemsP = $gwItemsP + $gwPrice * $invoiceQty;
-				$gwItemsTaxP = $gwItemsTaxP + $gwTax * $invoiceQty;
+				$gwItemsP += $gwPrice * $invoiceQty;
+				$gwItemsTaxP += $gwTax * $invoiceQty;
 
 				$prev = $item->getPrice() + ($item->getTaxAmount() / $item->getQtyOrdered());
 				$invoiceItem->setData('price_incl_tax', $prev);
