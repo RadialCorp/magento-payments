@@ -28,8 +28,6 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     const CREDITCARD_DENIED_MESSAGE = 'Radial_CreditCard_Denied';
     const CREDITCARD_FAILED_MESSAGE = 'Radial_CreditCard_Failed';
     const SETTLEMENT_FAILED_MESSAGE = 'Radial_CreditCard_Settlement_Failed';
-    const CREDITCARD_AVS_FAILED_MESSAGE = 'Radial_CreditCard_AVS_Failed';
-    const CREDITCARD_CVV_FAILED_MESSAGE = 'Radial_CreditCard_CVV_Failed';
     const METHOD_NOT_ALLOWED_FOR_COUNTRY = 'Radial_CreditCard_Method_Not_Allowed_For_Country';
     const INVALID_EXPIRATION_DATE = 'Radial_CreditCard_Invalid_Expiration_Date';
     const INVALID_CARD_TYPE = 'Radial_CreditCard_Invalid_Card_Type';
@@ -41,6 +39,8 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     const PAYMENT_RESPONSE_CODE_DECLF = 'DECLF';
     const PAYMENT_RESPONSE_CODE_DECL = 'DECL';
     const PAYMENT_RESPONSE_CODE_DECLR = 'DECLR';
+    const PAYMENT_RESPONSE_CODE_APPROVED = 'APPROVED';
+    const PAYMENT_RESPONSE_CODE_TIMEOUT = 'TIMEOUT';
     /**
      * Block type to use to render the payment method form.
      * @var string
@@ -437,7 +437,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     protected function _validateAuthResponse(Payload\Payment\ICreditCardAuthReply $response)
     {
     	// if auth was a complete success or declined fraud, accept the response and move on
-        if ($response->getIsAuthSuccessful() || $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLR ) {
+        if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_APPROVED || $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_DECLR ) {
             Mage::getSingleton('core/session')->setAVSCount(0);
             Mage::getSingleton('core/session')->setDECLFCount(0);
             Mage::getSingleton('core/session')->setDECLCount(0);
@@ -487,7 +487,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         // if AVS & CVV did not fail but was not a complete success, see if the
         // request is at least acceptable - timeout perhaps - and if so, take it
         // and allow order submit to continue
-        if ($response->getIsAuthAcceptable()) {
+        if ( $response->getRiskResponseCode() === self::PAYMENT_RESPONSE_CODE_TIMEOUT ) {
             Mage::getSingleton('core/session')->setAVSCount(0);
             Mage::getSingleton('core/session')->setDECLFCount(0);
             Mage::getSingleton('core/session')->setDECLCount(0);
