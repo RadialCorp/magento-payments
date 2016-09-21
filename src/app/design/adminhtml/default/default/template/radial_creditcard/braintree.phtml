@@ -14,4 +14,29 @@
  */
 ?>
 
+$urls = array( Mage::getBaseUrl(), Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_SKIN), Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_SKIN, array('_secure'=>true)),
+		Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA), Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA,  array('_secure'=>true)),
+		Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS), Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS, array('_secure'=>true)));
+
+$hostnames = array();
+
+foreach( $urls as $url )
+{
+	$hostnames[] = parse_url($url, PHP_URL_HOST);
+}
+
+$hostnames_uniq = array_unique($hostnames);
+
+if (isset($this->getRequest()->getServer('http_origin')) &&  $this->getRequest->getServer('http_origin') != ''){
+  foreach ($hostnames_uniq as $allowedOrigin) {
+    if (preg_match('#' . $allowedOrigin . '#', $this->getRequest->getServer('http_origin'))) {
+      $this->getResponse()->setHeader('Access-Control-Allow-Origin: ' . $this->getRequest->getServer('http_origin'));
+      $this->getResponse()->setHeader('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+      $this->getResponse()->setHeader('Access-Control-Max-Age: 1000');
+      $this->getResponse()->setHeader('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+      break;
+    }
+  }
+}
+
 <script type="text/javascript" src="<?php echo Mage::getBaseUrl('js')."radial_creditcard/".Mage::getStoreConfig('radial_creditcard/braintree_filename'); ?>" integrity="<?php $hash = base64_encode(hash('sha512', file_get_contents(Mage::getBaseDir().'/js/radial_creditcard/'.Mage::getStoreConfig('radial_creditcard/braintree_filename')), true)); $hash256 = base64_encode(hash('sha256', file_get_contents(Mage::getBaseDir().'/js/radial_creditcard/'.Mage::getStoreConfig('radial_creditcard/braintree_filename')), true)); echo 'sha512-'.$hash.' sha256-'.$hash256; ?>" crossorigin="anonymous"></script>
