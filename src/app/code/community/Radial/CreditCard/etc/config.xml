@@ -36,6 +36,26 @@ http://opensource.org/licenses/osl-3.0.php
         </helpers>
     </global>
     <frontend>
+	<events>
+            <controller_action_predispatch_checkout_onepage>
+                <observers>
+                    <radial_creditcard_issue_cors_header_onepage>
+                        <type>model</type>
+                        <class>radial_creditcard/observer</class>
+                        <method>issueCorsHeader</method>
+                    </radial_creditcard_issue_cors_header_onepage>
+                </observers>
+            </controller_action_predispatch_checkout_onepage>
+	    <controller_action_predispatch_checkout_multishipping_index>
+                <observers>
+                    <radial_creditcard_issue_cors_header_multiship>
+                        <type>model</type>
+                        <class>radial_creditcard/observer</class>
+                        <method>issueCorsHeader</method>
+                    </radial_creditcard_issue_cors_header_multiship>
+                </observers>
+            </controller_action_predispatch_checkout_multishipping_index>
+	</events>
         <layout>
             <updates>
                 <radial_creditcard>
@@ -70,6 +90,17 @@ http://opensource.org/licenses/osl-3.0.php
                 </Radial_CreditCard>
             </modules>
         </translate>
+	<events>
+	   <adminhtml_sales_order_create_process_data_before>
+                <observers>
+                    <radial_creditcard_issue_cors_header_adminhtml>
+                        <type>model</type>
+                        <class>radial_creditcard/observer</class>
+                        <method>issueCorsHeader</method>
+                    </radial_creditcard_issue_cors_header_adminhtml>
+                </observers>
+            </adminhtml_sales_order_create_process_data_before>
+        </events>
     </adminhtml>
     <default>
         <payment>
