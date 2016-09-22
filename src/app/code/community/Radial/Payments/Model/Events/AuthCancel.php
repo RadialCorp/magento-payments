@@ -76,14 +76,19 @@ class Radial_Payments_Model_Events_AuthCancel
     public function process()
     {
         $order = $this->getOrderModel()->loadByIncrementId($this->payload->getOrderId());
-        $statusHistoryComment = $this->helper->__(
-            'AuthCancel %s for %s was %s',
-            $this->payload->getTenderType(),
-            $this->helper->currency($this->payload->getAmount(), true, false),
-            $this->payload->getResponseCode()
-            );
-        $order->addStatusHistoryComment($statusHistoryComment);
-        $order->save();
+
+	if( $order->getId() )
+	{
+        	$statusHistoryComment = $this->helper->__(
+        	    'AuthCancel %s for %s was %s',
+        	    $this->payload->getTenderType(),
+        	    $this->helper->currency($this->payload->getAmount(), true, false),
+        	    $this->payload->getResponseCode()
+        	);
+        	$order->addStatusHistoryComment($statusHistoryComment);
+        	$order->save();
+	}
+
         return $this;
     }
 

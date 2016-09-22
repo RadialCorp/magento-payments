@@ -76,14 +76,19 @@ class Radial_Payments_Model_Events_SettlementStatus
     public function process()
     {
         $order = $this->getOrderModel()->loadByIncrementId($this->payload->getOrderId());
-        $statusHistoryComment = $this->helper->__(
-            'Settlement %s for %s was %s',
-            $this->payload->getSettlementType(),
-            $this->helper->currency($this->payload->getAmount(), true, false),
-            $this->payload->getSettlementStatus() == 'S' ? 'Successful' : 'Rejected'
-            );
-        $order->addStatusHistoryComment($statusHistoryComment);
-        $order->save();
+
+	if( $order->getId() )
+	{
+        	$statusHistoryComment = $this->helper->__(
+        	    'Settlement %s for %s was %s',
+        	    $this->payload->getSettlementType(),
+        	    $this->helper->currency($this->payload->getAmount(), true, false),
+        	    $this->payload->getSettlementStatus() == 'S' ? 'Successful' : 'Rejected'
+        	);
+        	$order->addStatusHistoryComment($statusHistoryComment);
+        	$order->save();
+	}
+
         return $this;
     }
 
