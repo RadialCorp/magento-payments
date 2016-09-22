@@ -34,10 +34,21 @@ http://opensource.org/licenses/osl-3.0.php
                 <class>Radial_CreditCard_Helper</class>
             </radial_creditcard>
         </helpers>
+	<events>
+           <adminhtml_controller_action_predispatch_start>
+                <observers>
+                    <radial_creditcard_issue_cors_header_adminhtml>
+                        <type>model</type>
+                        <class>radial_creditcard/observer</class>
+                        <method>issueCorsHeader</method>
+                    </radial_creditcard_issue_cors_header_adminhtml>
+                </observers>
+            </adminhtml_controller_action_predispatch_start>
+        </events>
     </global>
     <frontend>
 	<events>
-            <controller_action_predispatch_checkout_onepage>
+            <controller_action_predispatch_checkout_onepage_index>
                 <observers>
                     <radial_creditcard_issue_cors_header_onepage>
                         <type>model</type>
@@ -45,7 +56,7 @@ http://opensource.org/licenses/osl-3.0.php
                         <method>issueCorsHeader</method>
                     </radial_creditcard_issue_cors_header_onepage>
                 </observers>
-            </controller_action_predispatch_checkout_onepage>
+            </controller_action_predispatch_checkout_onepage_index>
 	    <controller_action_predispatch_checkout_multishipping_index>
                 <observers>
                     <radial_creditcard_issue_cors_header_multiship>
@@ -90,17 +101,6 @@ http://opensource.org/licenses/osl-3.0.php
                 </Radial_CreditCard>
             </modules>
         </translate>
-	<events>
-	   <adminhtml_sales_order_create_process_data_before>
-                <observers>
-                    <radial_creditcard_issue_cors_header_adminhtml>
-                        <type>model</type>
-                        <class>radial_creditcard/observer</class>
-                        <method>issueCorsHeader</method>
-                    </radial_creditcard_issue_cors_header_adminhtml>
-                </observers>
-            </adminhtml_sales_order_create_process_data_before>
-        </events>
     </adminhtml>
     <default>
         <payment>

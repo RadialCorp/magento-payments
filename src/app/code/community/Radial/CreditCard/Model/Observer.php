@@ -31,28 +31,11 @@ class Radial_CreditCard_Model_Observer
 
     public function issueCorsHeader(Varien_Event_Observer $observer)
     {
-	$urls = array( Mage::getBaseUrl(), Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_SKIN), Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_SKIN, array('_secure'=>true)),
-		Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA), Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA,  array('_secure'=>true)),
-		Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS), Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS, array('_secure'=>true)));
+	$url = parse_url(Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS, array('_secure'=>true)), PHP_URL_HOST);
 
-	$hostnames = array();
-
-	foreach( $urls as $url )
-	{
-		$hostnames[] = parse_url($url, PHP_URL_HOST);
-	}
-
-	$hostnames_uniq = array_unique($hostnames);
-
-	if ($this->getRequest()->getServer('http_origin') != ''){
-	  foreach ($hostnames_uniq as $allowedOrigin) {
-	    if (preg_match('#' . $allowedOrigin . '#', $this->getRequest()->getServer('http_origin'))) {
-	      $this->getResponse()->setHeader('Access-Control-Allow-Origin: ' . $this->getRequest()->getServer('http_origin'));
-	      $this->getResponse()->setHeader('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
-	      $this->getResponse()->setHeader('Access-Control-Max-Age: 1000');
-	      $this->getResponse()->setHeader('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-	      break;
-	    }
-	 }
+	Mage::app()->getResponse()->setHeader('Access-Control-Allow-Origin: ' . $url);
+	Mage::app()->getResponse()->setHeader('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+	Mage::app()->getResponse()->setHeader('Access-Control-Max-Age: 1000');
+	Mage::app()->getResponse()->setHeader('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
     }
 }
