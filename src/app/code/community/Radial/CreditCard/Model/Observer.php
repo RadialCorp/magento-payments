@@ -28,14 +28,4 @@ class Radial_CreditCard_Model_Observer
             ['payload' => $observer->getEvent()->getPayload()]
         )->process();
     }
-
-    public function issueCorsHeader(Varien_Event_Observer $observer)
-    {
-	$url = parse_url(Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS, array('_secure'=>true)), PHP_URL_HOST);
-
-	Mage::app()->getResponse()->setHeader('Access-Control-Allow-Origin: ' . $url);
-	Mage::app()->getResponse()->setHeader('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
-	Mage::app()->getResponse()->setHeader('Access-Control-Max-Age: 1000');
-	Mage::app()->getResponse()->setHeader('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-    }
 }
