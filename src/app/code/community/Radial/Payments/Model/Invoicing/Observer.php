@@ -71,7 +71,12 @@ class Radial_Payments_Model_Invoicing_Observer
         if (!$this->helper->isInvoicingEnabled()) {
             return;
         }
-        $shipment = $observer->getEvent()->getShipment();
-        $invoice = $this->helper->createInvoiceFromShipment($shipment);
+
+	$shipment = $observer->getEvent()->getShipment();
+
+        if ($shipment->getUpdatedAt() == $shipment->getCreatedAt())
+        {
+                $invoice = $this->helper->createInvoiceFromShipment($shipment);
+        }
     }
 }
