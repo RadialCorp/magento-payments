@@ -115,6 +115,7 @@ http://opensource.org/licenses/osl-3.0.php
                 <radial_creditcard_pubkey_sync>
                     <schedule><cron_expr>30 6 * * *</cron_expr></schedule>
                     <run><model>radial_creditcard/method_ccpayment::cronPubkeysync</model></run>
+		    <groups>radial</groups>
                 </radial_creditcard_pubkey_sync>
             </jobs>
      </crontab>

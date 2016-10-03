@@ -27,6 +27,7 @@ http://opensource.org/licenses/osl-3.0.php
                 <schedule>
                     <cron_expr>*/5 * * * *</cron_expr>
                 </schedule>
+		<groups>radial</groups>
             </radial_amqp_runner_process_queues>
         </jobs>
     </crontab>
