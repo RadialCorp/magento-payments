@@ -104,6 +104,7 @@ http://opensource.org/licenses/osl-3.0.php
             <radial_payments_retry_settlements>
                 <schedule><cron_expr>*/5 * * * *</cron_expr></schedule>
                 <run><model>radial_payments/cron::retrySettlements</model></run>
+		<groups>radial</groups>
             </radial_payments_retry_settlements>
         </jobs>
     </crontab>
