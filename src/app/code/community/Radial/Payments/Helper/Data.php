@@ -40,16 +40,14 @@ class Radial_Payments_Helper_Data extends Mage_Core_Helper_Abstract
     public function failConfirmFundsRequest(Mage_Sales_Model_Order $order, $message = '')
     {
         $this->rollbackOrderItemDataChanges($order);
-        // cancel order items but do not cancel payment
-        $order->registerCancellation();
-        $order->getStatusHistoryCollection(true);
+        $order->cancel();
 
-        // cancel order if no further actions remaining
-        if ($this->canCancelOrder($order)) {
-            $order->setState(Mage_Sales_Model_Order::STATE_CANCELED, true, $message);
-            $order->setStatus('canceled');
-        }
-        $order->save();
+	$message = "Ordered Canceled by ConfirmFunds";
+
+	$order->addStatusHistoryComment($message);
+	$order->save();
+
+	return $this;
     }
 
     /**
