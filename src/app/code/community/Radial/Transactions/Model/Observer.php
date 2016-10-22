@@ -73,4 +73,15 @@ class Radial_Transactions_Model_Observer
         $payment = $event->getPayment();
         $this->helper->preparePaymentForTransaction($payment);
     }
+
+    /**
+     * Updating the Transaction Id allows multiple transactions to be created
+     * @param Varien_Event_Observer $observer
+     */
+    public function handleRefundPaymentEvent(Varien_Event_Observer $observer)
+    {
+        $event = $observer->getEvent();
+        $payment = $event->getPayment();
+        $this->helper->preparePaymentForTransaction($payment);
+    }
 }

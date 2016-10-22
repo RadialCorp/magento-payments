@@ -70,6 +70,15 @@ http://opensource.org/licenses/osl-3.0.php
                     </radial_transactions_order_payment_capture_observer>
                 </observers>
             </sales_order_payment_capture>
+	    <sales_order_payment_refund>
+                <observers>
+                    <radial_transactions_order_payment_refund_observer>
+                        <type>model</type>
+                        <class>radial_transactions/observer</class>
+                        <method>handleRefundPaymentEvent</method>
+                    </radial_transactions_order_payment_refund_observer>
+                </observers>
+            </sales_order_payment_refund>
         </events>
     </global>
 </config>
