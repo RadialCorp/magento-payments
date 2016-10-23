@@ -859,7 +859,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             Mage::throwException($this->_helper->__('Invalid amount to capture.'));
         }
         $api = $this->_getConfirmFundsApi($payment);
-        $this->_prepareConfirmFundsRequest($api, $payment, $amount);
+        $this->_prepareConfirmFundsRequest($api, $payment, $payment->getAmountAuthorized());
         Mage::dispatchEvent('radial_creditcard_confirm_funds_send_before', [
             'payload' => $api->getRequestBody(),
             'payment' => $payment,

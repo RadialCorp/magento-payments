@@ -336,7 +336,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
         }
 
         // confirm funds
-        $this->_api->doConfirm($payment, $amount);
+        $this->_api->doConfirm($payment, $payment->getAmountAuthorized());
         return $this;
     }
 
