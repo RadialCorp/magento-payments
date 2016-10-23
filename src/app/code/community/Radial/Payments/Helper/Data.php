@@ -24,7 +24,7 @@ class Radial_Payments_Helper_Data extends Mage_Core_Helper_Abstract
     {
         /** @var Mage_Sales_Model_Order_Item $item */
         foreach ($order->getAllItems() as $item) {
-            if ($item->getQtyOrdered() > $item->getQtyInvoiced()) {
+            if ($item->getQtyOrdered() > $item->getQtyInvoiced() && $order->getData('radial_tax_transmit') !== -1) {
                 return false;
             }
         }
