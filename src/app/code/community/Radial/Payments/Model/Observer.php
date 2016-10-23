@@ -122,6 +122,16 @@ class Radial_Payments_Model_Observer
 					$gwTax = 0;
 				}
 
+				if( !$gwItemsP )
+				{
+					$gwItemsP = 0;
+				}
+
+				if( !$gwItemsTaxP )
+				{
+					$gwItemsTaxP = 0;
+				}
+
 				$invoiceQty = $invoiceItem->getQty();
 
 				$gwItemsP += $gwPrice * $invoiceQty;
