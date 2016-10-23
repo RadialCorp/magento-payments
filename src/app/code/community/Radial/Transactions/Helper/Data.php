@@ -16,19 +16,23 @@
 class Radial_Transactions_Helper_Data extends Mage_Core_Helper_Abstract
 {
     const AMOUNT_AUTHORIZED = 'RADIAL_TRANSACTION_AMOUNT_AUTHORIZED';
-    
+    const AMOUNT_CAPTURED = 'RADIAL_TRANSACTION_AMOUNT_CAPTURED';
+    const AMOUNT_CAPTURED_TOTAL = 'RADIAL_TRANSACTION_AMOUNT_CAPTURED_TOTAL';
+    const AMOUNT_REFUNDED = 'RADIAL_TRANSACTION_AMOUNT_REFUNDED_TOTAL';
+    const AMOUNT_REFUNDED_CURRENT = 'RADIAL_TRANSACTION_AMOUNT_REFUNDED_TRANSACTIONAL';    
+
     /**
      * @param Mage_Sales_Model_Order_Payment
      * @param bool
      */
-    public function preparePaymentForTransaction(Mage_Sales_Model_Order_Payment $payment, $isClosed = false)
+    public function preparePaymentForTransaction(Mage_Sales_Model_Order_Payment $payment, $isClosed = false, Mage_Sales_Model_Order_Creditmemo $creditmemo = null, Mage_Sales_Model_Order_Invoice $invoice = null)
     {
         $transactionId = $this->getTransactionNumber($payment);
         $payment->setTransactionId($transactionId);
         $payment->setIsTransactionClosed($isClosed);
         $payment->setTransactionAdditionalInfo(
             Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
-            $this->getPaymentAdditionalInfo($payment)
+            $this->getPaymentAdditionalInfo($payment, $creditmemo, $invoice)
         );
     }
 
@@ -44,10 +48,32 @@ class Radial_Transactions_Helper_Data extends Mage_Core_Helper_Abstract
      * @param Mage_Sales_Model_Order_Payment
      * @return array
      */
-    protected function getPaymentAdditionalInfo(Mage_Sales_Model_Order_Payment $payment)
+    protected function getPaymentAdditionalInfo(Mage_Sales_Model_Order_Payment $payment, Mage_Sales_Model_Order_Creditmemo $creditmemo = null, Mage_Sales_Model_Order_Invoice $invoice = null)
     {
-        return [
-            $this->__(static::AMOUNT_AUTHORIZED) => $payment->getAmountAuthorized(),
-        ];
+	$data = array();
+
+	$data[$this->__(static::AMOUNT_AUTHORIZED)] = $payment->getAmountAuthorized();
+
+	if( $invoice )
+	{
+		$data[$this->__(static::AMOUNT_CAPTURED)] = $invoice->getGrandTotal();
+	}
+
+	if( $creditmemo )
+	{
+		$data[$this->__(static::AMOUNT_REFUNDED_CURRENT)] = $creditmemo->getGrandTotal();
+	}
+
+	if( $payment->getAmountRefunded() )
+	{
+		$data[$this->__(static::AMOUNT_REFUNDED)] = $payment->getAmountRefunded();
+	}
+
+	if( $payment->getAmountPaid())
+	{
+		$data[$this->__(static::AMOUNT_CAPTURED_TOTAL)] = $payment->getAmountPaid();
+	}
+
+        return $data;
     }
 }

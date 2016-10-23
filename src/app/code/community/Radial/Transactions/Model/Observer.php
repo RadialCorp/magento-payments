@@ -55,7 +55,7 @@ class Radial_Transactions_Model_Observer
         $event = $observer->getEvent();
         /** @var Mage_Sales_Model_Order_Payment $payment */
         $payment = $event->getPayment();
-        $this->helper->preparePaymentForTransaction($payment);
+        $this->helper->preparePaymentForTransaction($payment,false,null,null);
         $payment->addTransaction(
             Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, 
             null, 
@@ -71,7 +71,8 @@ class Radial_Transactions_Model_Observer
     {
         $event = $observer->getEvent();
         $payment = $event->getPayment();
-        $this->helper->preparePaymentForTransaction($payment);
+	$invoice = $event->getInvoice();
+        $this->helper->preparePaymentForTransaction($payment,false,null,$invoice);
     }
 
     /**
@@ -80,8 +81,14 @@ class Radial_Transactions_Model_Observer
      */
     public function handleRefundPaymentEvent(Varien_Event_Observer $observer)
     {
-        $event = $observer->getEvent();
+    	$event = $observer->getEvent();
         $payment = $event->getPayment();
-        $this->helper->preparePaymentForTransaction($payment);
+	$creditmemo = $event->getCreditmemo();
+        $this->helper->preparePaymentForTransaction($payment,false,$creditmemo,null);
+	$payment->addTransaction(
+            Mage_Sales_Model_Order_Payment_Transaction::TYPE_REFUND,
+            null,
+            true
+        );
     }
 }
