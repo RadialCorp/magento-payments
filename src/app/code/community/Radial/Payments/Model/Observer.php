@@ -152,6 +152,16 @@ class Radial_Payments_Model_Observer
 			$_invoice->setData('base_subtotal_incl_tax', $subtotalTax);
 			$_invoice->setData('tax_amount', $taxAmt);
 
+			if( !$gwItemsP)
+			{
+				$gwItemsP = 0;
+			}
+
+			if( !$gwItemsTaxP )
+			{
+				$gwItemsTaxP = 0;
+			}
+
 			$_invoice->setData('gw_items_price', $gwItemsP);
                 	$_invoice->setData('gw_items_base_price', $gwItemsP);
                 	$_invoice->setData('gw_items_base_tax_amount', $gwItemsTaxP);
