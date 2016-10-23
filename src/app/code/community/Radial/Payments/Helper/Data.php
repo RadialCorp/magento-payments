@@ -22,9 +22,14 @@ class Radial_Payments_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function isFinalDebit(Mage_Sales_Model_Order $order)
     {
+	if( $order->getData('radial_tax_transmit') > -1 )
+	{
+		return false;
+	}
+
         /** @var Mage_Sales_Model_Order_Item $item */
         foreach ($order->getAllItems() as $item) {
-            if ($item->getQtyOrdered() > $item->getQtyInvoiced() && $order->getData('radial_tax_transmit') !== -1) {
+            if ($item->getQtyOrdered() > $item->getQtyInvoiced() ) {
                 return false;
             }
         }
