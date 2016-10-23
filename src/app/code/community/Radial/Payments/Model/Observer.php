@@ -100,6 +100,11 @@ class Radial_Payments_Model_Observer
 		$subtotalTax = 0;
 		$taxAmt = 0;
 
+		$gwItemsP = 0;
+		$gwItemsTaxP = 0;
+		$gwPrice = 0;
+		$gwTax = 0;
+
 		foreach( $_invoice->getAllItems() as $invoiceItem )
 		{
 			$itemC = Mage::getModel('sales/order_item')->getCollection()
@@ -112,26 +117,6 @@ class Radial_Payments_Model_Observer
 				$gwPrice = $item->getGwPrice();
 				$gwTax = $item->getGwTaxAmount();
 				
-				if( !$gwPrice )
-				{
-					$gwPrice = 0;
-				}
- 
-				if( !$gwTax )
-				{
-					$gwTax = 0;
-				}
-
-				if( !$gwItemsP )
-				{
-					$gwItemsP = 0;
-				}
-
-				if( !$gwItemsTaxP )
-				{
-					$gwItemsTaxP = 0;
-				}
-
 				$invoiceQty = $invoiceItem->getQty();
 
 				$gwItemsP += $gwPrice * $invoiceQty;
