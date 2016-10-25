@@ -752,7 +752,22 @@ class Radial_Paypal_Model_Express_Api
             
 	    if( isset($quote->getTotals()['radial_tax']) && $quote->getTotals()['radial_tax']->getValue())
             {
-                $container->setTaxTotal($this->getTotal('radial_tax', $quote));
+		$toggleFees = Mage::getStoreConfig('radial_core/radial_tax_core/displayfees', $quote->getStoreId());
+		$toggleDuties = Mage::getStoreConfig('radial_core/radial_tax_core/displayduties', $quote->getStoreId());
+
+		$total = $this->getTotal('radial_tax', $quote);
+
+		if( $toggleFees )
+		{
+			$total += $this->getTotal('radial_tax_fees', $quote);
+		}
+
+		if( $toggleDuties )
+		{
+			$total += $this->getTotal('radial_tax_duties', $quote);
+		}
+
+                $container->setTaxTotal($total);
             } else {
                 if( isset($quote->getTotals()['tax']) && $quote->getTotals()['tax']->getValue())
                 {
