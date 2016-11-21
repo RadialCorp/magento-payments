@@ -165,6 +165,25 @@ class Radial_CreditCard_Test_Model_Method_CcpaymentTest extends Radial_Core_Test
     /**
      * Build a mock credit card auth reply payload scripted to return the given
      * values for various success checks.
+     * @param  enum (SUCCESS, FAIL, TIMEOUT)  $isFundsAvailable
+     * @param  bool $isReauthorizationAttempted
+     * @return Payload\Payment\IConfirmFundsReply
+     */
+    protected function _buildPayloadToValidateConfirmFunds($isFundsAvailable = "Success", $isReauthorizationAttempted = true)
+    {
+        $payload = $this->getMockForAbstractClass('\eBayEnterprise\RetailOrderManagement\Payload\Payment\IConfirmFundsReply');
+        $payload->expects($this->any())
+            ->method('getFundsAvailable')
+            ->will($this->returnValue($isFundsAvailable));
+        $payload->expects($this->any())
+            ->method('getReauthorizationAttempted')
+            ->will($this->returnValue($isReauthorizationAttempted));
+        return $payload;
+    }
+
+    /**
+     * Build a mock confirm funds reply payload scripted to return the given
+     * values for various success checks.
      * @param  bool $isSuccess
      * @param  bool $isAcceptable
      * @param  bool $isAvsSuccess
@@ -211,6 +230,26 @@ class Radial_CreditCard_Test_Model_Method_CcpaymentTest extends Radial_Core_Test
     }
 
     /**
+     * Provide a payload to validate and the name of the exception that should
+     * be thrown if the payload is invalid.
+     * @return array
+     */
+    public function provideTestValidateResponseConfirmFunds()
+    {
+        return array(
+            // all pass
+            array("SUCCESS", true),
+            array("SUCCESS", false),
+            array("TIMEOUT", true),
+            array("TIMEOUT", false), 
+            // failures
+	    array("FAIL", true),
+	    array("FAIL", false),
+	);
+    }
+
+
+    /**
      * Response payload should pass or throw the expected exception
      *
      * @param  bool $isSuccess
@@ -231,6 +270,27 @@ class Radial_CreditCard_Test_Model_Method_CcpaymentTest extends Radial_Core_Test
         $this->assertSame(
             $paymentMethod,
             EcomDev_Utils_Reflection::invokeRestrictedMethod($paymentMethod, '_validateAuthResponse', array($payload))
+        );
+    }
+
+    /**
+     * Response payload should pass or throw the expected exception
+     *
+     * @param  enum (SUCCESS, FAIL, TIMEOUT)  $isFundsAvailable
+     * @param  bool $isReauthorizationAttempted
+     * @param  string|null $exception Name of exception to throw, null if no expected exception
+     * @dataProvider provideTestValidateResponseConfirmFunds
+     */
+    public function testValidateResponseConfirmFunds($isFundsAvailable, $isReauthorizationAttempted, $exception)
+    {
+        $payload = $this->_buildPayloadToValidateConfirmFunds($isFundsAvailable, $isReauthorizationAttempted);
+        if ($exception) {
+            $this->setExpectedException($exception);
+        }
+        $paymentMethod = Mage::getModel('radial_creditcard/method_ccpayment');
+        $this->assertSame(
+            $paymentMethod,
+            EcomDev_Utils_Reflection::invokeRestrictedMethod($paymentMethod, '_validateConfirmFundsResponse', array($payload))
         );
     }
 
@@ -550,7 +610,7 @@ class Radial_CreditCard_Test_Model_Method_CcpaymentTest extends Radial_Core_Test
         /** @var Radial_CreditCard_Model_Method_Ccpayment $payment */
         $payment = Mage::getModel('radial_creditcard/method_ccpayment');
 
-        $this->assertSame($payment, EcomDev_Utils_Reflection::invokeRestrictedMethod($invoice, '_handleDebitResponse', [$api, $invoice]));
+        $this->assertSame($payment, EcomDev_Utils_Reflection::invokeRestrictedMethod($payment, '_handleDebitResponse', [$api, $invoice]));
     }
 
     /**
