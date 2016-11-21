@@ -536,10 +536,10 @@ class Radial_CreditCard_Test_Model_Method_CcpaymentTest extends Radial_Core_Test
     }
 
    /**
-    * Scenario: Prepare Confirm Funds API Request
+    * Scenario: Prepare A Settlement API Debit Request
     * Given an order that has been authorized
-    * When Confirm Funds is invoked by invoicing directly or fraud
-    * Then the Confirm Funds Request API is set with the tender authorized for the order
+    * When Settlement is Invoked by Invoice / Shipment 
+    * Then the Settlement Request API is set with the tender authorized for the order
     */
     public function testPrepareSettlementApiRequest()
     {
@@ -611,6 +611,84 @@ class Radial_CreditCard_Test_Model_Method_CcpaymentTest extends Radial_Core_Test
         $payment = Mage::getModel('radial_creditcard/method_ccpayment');
 
         $this->assertSame($payment, EcomDev_Utils_Reflection::invokeRestrictedMethod($payment, '_handleDebitResponse', [$api, $invoice]));
+    }
+
+   /**
+    * Scenario: Prepare Settlement API Credit Request
+    * Given an order that has been authorized and invoices (shipped)
+    * When a credit memo is placed 
+    * Then the Settlement Request API is set to refund the portion of the order previously shipped
+    */
+    public function testPrepareSettlementApiRequestCredit()
+    {
+        /** @var array $billingData */
+        $billingData = [
+            'firstname' => 'Someone',
+            'lastname' => 'Somebody',
+            'telephone' => '555-555-5555',
+            'street' => '630 Allendale Rd',
+            'city' => 'King of Prussia',
+            'region_code' => 'PA',
+            'country' => 'US',
+            'postcode' => '19604',
+        ];
+        /** @var Mage_Sales_Model_Order_Address $shippingAddress */
+        $shippingAddress = Mage::getModel('sales/order_address', ['id' => 1]);
+        /** @var Mage_Sales_Model_Order_Address $billingAddress */
+        $billingAddress = Mage::getModel('sales/order_address', array_merge($billingData, ['id' => 2]));
+        /** @var Mage_Sales_Model_Order $order */
+        $order = Mage::getModel('sales/order', [
+            'is_virtual' => true
+        ]);
+        $order->setShippingAddress($shippingAddress)
+            ->setBillingAddress($billingAddress);
+        /** @var Mage_Sales_Model_Order_Payment $orderPayment */
+        $orderPayment = Mage::getModel('sales/order_payment', ['cc_exp_year' => 2023, 'cc_exp_month' => 8, 'amount_authorized' => 50])->setOrder($order);
+
+        //START Handle Creditmemo
+        $creditmemo = Mage::getModel('sales/service_order', $order)->prepareCreditmemo();
+
+        $mockMethods = [
+                'setRequestId' => null,
+                'setOrderId' => null,
+                'setPanIsToken' => null,
+                'setCardNumber' => null,
+                'setInvoiceId' => null,
+                'setAmount' => null,
+                'setCurrencyCode' => null,
+                'setTaxAmount' => null,
+                'setSettlementType' => null,
+                'setClientContext' => null,
+                'setFinalDebit' => null,
+        ];
+
+        /** @var IConfirmFundsRequest $request **/
+        $request = $this->getMockForAbstractClass('\eBayEnterprise\RetailOrderManagement\Payload\Payment\IPaymentSettlementRequest', [], '', true, true, true, array_keys($mockMethods));
+
+         foreach ($mockMethods as $method => $with) {
+            if (is_null($with)) {
+                $request->expects($this->once())
+                    ->method($method)
+                    ->will($this->returnSelf());
+            } else {
+                // Using "with" only when there's an actual value
+                $request->expects($this->once())
+                    ->method($method)
+                    ->with($this->identicalTo($with))
+                    ->will($this->returnSelf());
+            }
+        }
+
+        /** @var IBidirectionalApi $api */
+        $api = $this->getMockForAbstractClass('\eBayEnterprise\RetailOrderManagement\Api\IBidirectionalApi', [], '', true, true, true, ['getRequestBody']);
+        $api->expects($this->once())
+            ->method('getRequestBody')
+            ->will($this->returnValue($request));
+
+        /** @var Radial_CreditCard_Model_Method_Ccpayment $payment */
+        $payment = Mage::getModel('radial_creditcard/method_ccpayment');
+
+        $this->assertSame($payment, EcomDev_Utils_Reflection::invokeRestrictedMethod($payment, '_prepareCreditRequest', [$api, $creditmemo, $orderPayment]));
     }
 
     /**
