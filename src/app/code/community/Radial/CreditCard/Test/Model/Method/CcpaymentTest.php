@@ -404,6 +404,77 @@ class Radial_CreditCard_Test_Model_Method_CcpaymentTest extends Radial_Core_Test
         $this->assertSame($payment, EcomDev_Utils_Reflection::invokeRestrictedMethod($payment, '_prepareAuthRequest', [$api, $orderPayment]));
     }
 
+   /**
+    * Scenario: Prepare Confirm Funds API Request
+    * Given an order that has been authorized
+    * When Confirm Funds is invoked by invoicing directly or fraud
+    * Then the Confirm Funds Request API is set with the tender authorized for the order
+    */
+    public function testPrepareConfirmFundsApiRequest()
+    {
+	/** @var array $billingData */
+        $billingData = [
+            'firstname' => 'Someone',
+            'lastname' => 'Somebody',
+            'telephone' => '555-555-5555',
+            'street' => '630 Allendale Rd',
+            'city' => 'King of Prussia',
+            'region_code' => 'PA',
+            'country' => 'US',
+            'postcode' => '19604',
+        ];
+        /** @var Mage_Sales_Model_Order_Address $shippingAddress */
+        $shippingAddress = Mage::getModel('sales/order_address', ['id' => 1]);
+        /** @var Mage_Sales_Model_Order_Address $billingAddress */
+        $billingAddress = Mage::getModel('sales/order_address', array_merge($billingData, ['id' => 2]));
+        /** @var Mage_Sales_Model_Order $order */
+        $order = Mage::getModel('sales/order', [
+            'is_virtual' => true
+        ]);
+        $order->setShippingAddress($shippingAddress)
+            ->setBillingAddress($billingAddress);
+        /** @var Mage_Sales_Model_Order_Payment $orderPayment */
+        $orderPayment = Mage::getModel('sales/order_payment', ['cc_exp_year' => 2023, 'cc_exp_month' => 8, 'amount_authorized' => 50])->setOrder($order);
+
+	$mockMethods = [
+		'setRequestId' => null,
+		'setOrderId' => null,
+		'setPanIsToken' => null,
+		'setCardNumber' => null,
+		'setAmount' => null,
+		'setCurrencyCode' => null,
+		'setPerformReauthorization' => null,
+	];
+
+	/** @var IConfirmFundsRequest $request **/
+        $request = $this->getMockForAbstractClass('\eBayEnterprise\RetailOrderManagement\Payload\Payment\IConfirmFundsRequest', [], '', true, true, true, array_keys($mockMethods));
+
+	 foreach ($mockMethods as $method => $with) {
+            if (is_null($with)) {
+                $request->expects($this->once())
+                    ->method($method)
+                    ->will($this->returnSelf());
+            } else {
+                // Using "with" only when there's an actual value
+                $request->expects($this->once())
+                    ->method($method)
+                    ->with($this->identicalTo($with))
+                    ->will($this->returnSelf());
+            }
+        }
+
+	/** @var IBidirectionalApi $api */
+        $api = $this->getMockForAbstractClass('\eBayEnterprise\RetailOrderManagement\Api\IBidirectionalApi', [], '', true, true, true, ['getRequestBody']);
+        $api->expects($this->once())
+            ->method('getRequestBody')
+            ->will($this->returnValue($request));
+
+        /** @var Radial_CreditCard_Model_Method_Ccpayment $payment */
+        $payment = Mage::getModel('radial_creditcard/method_ccpayment');
+
+        $this->assertSame($payment, EcomDev_Utils_Reflection::invokeRestrictedMethod($payment, '_prepareConfirmFundsRequest', [$api, $orderPayment, $orderPayment->getAmountAuthorized()]));
+    }
+
     /**
      * Provide exceptions that can be thrown from the SDK and the exception
      * expected to be thrown after handling the SDK exception.
