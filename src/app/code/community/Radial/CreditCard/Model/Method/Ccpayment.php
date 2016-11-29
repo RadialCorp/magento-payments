@@ -35,6 +35,14 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     const INVALID_CARD_TYPE = 'Radial_CreditCard_Invalid_Card_Type';
     const SETTLEMENT_TYPE_CAPTURE = 'Debit';
     const SETTLEMENT_TYPE_REFUND = 'Credit';
+    const PAYMENT_RESPONSE_CODE_AVS = 'AVS';
+    const PAYMENT_RESPONSE_CODE_AVSCSC = 'AVSCSC';
+    const PAYMENT_RESPONSE_CODE_CSC = 'CSC';
+    const PAYMENT_RESPONSE_CODE_DECLF = 'DECLF';
+    const PAYMENT_RESPONSE_CODE_DECL = 'DECL';
+    const PAYMENT_RESPONSE_CODE_DECLR = 'DECLR';
+    const PAYMENT_RESPONSE_CODE_APPROVED = 'APPROVED';
+    const PAYMENT_RESPONSE_CODE_TIMEOUT = 'TIMEOUT';
     /**
      * Block type to use to render the payment method form.
      * @var string
