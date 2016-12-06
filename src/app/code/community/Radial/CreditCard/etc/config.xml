@@ -104,11 +104,11 @@ http://opensource.org/licenses/osl-3.0.php
     </default>
     <crontab>
         <jobs>
-            <radial_payments_auth_cancel_grace>
+            <radial_creditcard_auth_cancel_grace>
                 <schedule><cron_expr>*/5 * * * *</cron_expr></schedule>
                 <run><model>radial_creditcard/cron::authCancelGrace</model></run>
                 <groups>radial</groups>
-            </radial_payments_auth_cancel_grace>
+            </radial_creditcard_auth_cancel_grace>
         </jobs>
     </crontab>
     <phpunit>
