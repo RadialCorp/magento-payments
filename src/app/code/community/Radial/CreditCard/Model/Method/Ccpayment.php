@@ -1096,7 +1096,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $request = $api->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
-        $amountAuthorized = $order->getBaseGrandTotal();
+        $amountAuthorized = $payment->getAmountAuthorized();
         $request
             ->setPanIsToken(true)
             ->setCardNumber($payment->getCcNumber())
