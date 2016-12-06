@@ -145,6 +145,15 @@ http://opensource.org/licenses/osl-3.0.php
                                 <show_in_website>1</show_in_website>
                                 <show_in_store>0</show_in_store>
                          </paymentdecl_error>
+			 <authgrace translate="label">
+                                <label>Auth Cancel For Non-Converted Orders</label>
+				<comment>Grace Period in Hours</comment>
+                                <sort_order>17</sort_order>
+                                <frontend_type>text</frontend_type>
+                                <show_in_default>1</show_in_default>
+                                <show_in_website>1</show_in_website>
+                                <show_in_store>0</show_in_store>
+			 </authgrace>
                     </fields>
                 </radial_creditcard>
             </groups>
