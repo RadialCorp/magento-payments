@@ -34,7 +34,7 @@ class Radial_CreditCard_Model_Cron
 	);
 
         $quoteCollection = Mage::getResourceModel('sales/quote_collection')
-                                ->addFieldToFilter('created_at', array('to' => $from))
+                                ->addFieldToFilter('updated_at', array('to' => $from))
                                 ->addFieldToFilter('is_active', array('eq' => 1 ))
                                 ->setPageSize(100);
 
@@ -51,17 +51,17 @@ class Radial_CreditCard_Model_Cron
 
                         if( $payment->getMethod() == 'radial_creditcard' )
                         {
-                                $validForCancel = array( 'AVS', 'DECL', 'DECLF' );
+                        	$validForCancel = array( 'AVS', 'DECL', 'DECLF' );
+                                $addlInformation = $payment->getAdditionalInformation();
 
                                 if( in_array( $payment->getAdditionalInformation()['risk_response_code'], $validForCancel))
                                 {
                                         $payment->getMethodInstance()->void($payment);
-                                        $prev = $payment->getAdditionalInformation()['risk_response_code'];
-                                        $payment->getAdditionalInformation()['risk_response_code'] = $prev . '-C';
+                                        $addlInformation['risk_response_code'] = $addlInformation['risk_response_code'] . '-C';
+                                        $payment->setAdditionalInformation($addlInformation);
                                         $payment->save();
                                 }
-                        }
-
+			}
                 }
 
                 $currentPage++;
