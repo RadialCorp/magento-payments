@@ -88,7 +88,6 @@ http://opensource.org/licenses/osl-3.0.php
                 <paymentavs>0</paymentavs>
                 <paymentavscsc_error>Please Correct Billing Address &amp; Card Security Code</paymentavscsc_error>
                 <paymentcsc_error>Please Correct Card Security Code</paymentcsc_error>
-		<authgrace>4</authgrace>
             </radial_creditcard>
         </payment>
         <radial_creditcard>
