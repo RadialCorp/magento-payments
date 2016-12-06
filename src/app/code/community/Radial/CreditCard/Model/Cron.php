@@ -51,7 +51,7 @@ class Radial_CreditCard_Model_Cron
 
                         if( $payment->getMethod() == 'radial_creditcard' )
                         {
-                        	$validForCancel = array( 'AVS', 'DECL', 'DECLF' );
+                        	$validForCancel = array( 'AVS', 'AVSCSC', 'CSC' );
                                 $addlInformation = $payment->getAdditionalInformation();
 
                                 if( in_array( $payment->getAdditionalInformation()['risk_response_code'], $validForCancel))
