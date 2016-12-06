@@ -24,14 +24,17 @@ class Radial_CreditCard_Model_Cron
      */
     public function authCancelGrace()
     {
-        $time = time();
-        $authGrace = Mage::getStoreConfig('payment/radial_creditcard/authgrace') * 60 * 60;
-        $to = date('Y-m-d H:i:s', $time);
-        $lastTime = $time - $authGrace;
-        $from = date('Y-m-d H:i:s', $lastTime);
+	$authGrace = Mage::getStoreConfig('payment/radial_creditcard/authgrace');
+	$adapter = Mage::getSingleton('core/resource')->getConnection('sales_read');
+	$minutes = $authGrace * 60;
+	$from = $adapter->getDateSubSql(
+	    $adapter->quote(now()), 
+	    $minutes, 
+	    Varien_Db_Adapter_Interface::INTERVAL_MINUTE
+	);
 
-        $quoteCollection = Mage::getSingleton('sales/quote')->getCollection()
-                                ->addFieldToFilter('created_at', array('from' => $from, 'to' => $to))
+        $quoteCollection = Mage::getResourceModel('sales/quote_collection')
+                                ->addFieldToFilter('created_at', array('to' => $from))
                                 ->addFieldToFilter('is_active', array('eq' => 1 ))
                                 ->setPageSize(100);
 
@@ -52,7 +55,7 @@ class Radial_CreditCard_Model_Cron
 
                                 if( in_array( $payment->getAdditionalInformation()['risk_response_code'], $validForCancel))
                                 {
-                                        $payment->getMethodInstance()->void();
+                                        $payment->getMethodInstance()->void($payment);
                                         $prev = $payment->getAdditionalInformation()['risk_response_code'];
                                         $payment->getAdditionalInformation()['risk_response_code'] = $prev . '-C';
                                         $payment->save();
