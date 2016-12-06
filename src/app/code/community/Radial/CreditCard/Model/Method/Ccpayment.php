@@ -1078,16 +1078,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
         $request = $api->getRequestBody();
         /** @var Mage_Sales_Model_Order $order */
         $order = $payment->getOrder();
-
-	if( !$order )
-	{
-		$quote = $payment->getQuote();
-		$amountAuthorized = $quote->getBaseGrandTotal();
-		$orderId = $quote->getReservedOrderId();
-	} else {
-		$amountAuthorized = $order->getBaseGrandTotal();
-		$orderId = $order->getIncrementId();
-	}
+ 	$amountAuthorized = $payment->getAmountAuthorized();
 
         $request
             ->setPanIsToken(true)
@@ -1095,7 +1086,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
             ->setRequestId($this->_coreHelper->generateRequestId('CCA-'))
             ->setAmount((float)$amountAuthorized)
             ->setCurrencyCode(Mage::app()->getStore()->getBaseCurrencyCode())
-            ->setOrderId($orderId);
+            ->setOrderId($order->getIncrementId());
         return $this;
     }
     /**
@@ -1139,6 +1130,9 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
      */
     public function void(Varien_Object $payment)
     {
+	if (!$payment->getParentTransactionId()) {
+            Mage::throwException($this->_helper->__('Invalid transaction ID.'));
+        }
         $api = $this->_getAuthCancelApi($payment);
         $this->_prepareAuthCancelRequest($api, $payment);
         Mage::dispatchEvent('radial_creditcard_auth_cancel_request_send_before', [
