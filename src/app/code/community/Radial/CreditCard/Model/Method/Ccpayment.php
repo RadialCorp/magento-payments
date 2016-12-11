@@ -822,6 +822,7 @@ class Radial_CreditCard_Model_Method_Ccpayment extends Mage_Payment_Model_Method
     public function capture(Varien_Object $payment, $amount)
     {
 	$order = $payment->getOrder();
+	$amount = $payment->getAmountAuthorized();
         $notCapturable = 1;
 
         if ($order->hasInvoices()) {
