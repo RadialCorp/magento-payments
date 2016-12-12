@@ -72,15 +72,14 @@ class Radial_Payments_Model_Invoicing_Observer
             return;
         }
 
-	$shipment = $observer->getEvent()->getShipment();
+        $shipment = $observer->getEvent()->getShipment();
         $order = $shipment->getOrder();
 
         $invoice = false;
         $orderItemIds = array();
-
         foreach( $shipment->getAllItems() as $shipItem )
         {
-                $orderItemIds[] = $shipment->getOrderItemId();
+                $orderItemIds[] = $shipItem->getOrderItemId();
         }
 
         $orderItems = Mage::getModel('sales/order_item')->getCollection()
@@ -92,13 +91,13 @@ class Radial_Payments_Model_Invoicing_Observer
                 $qtyInvoiced = $orderItem->getQtyInvoiced();
                 $qtyShipped = $orderItem->getQtyShipped();
 
-                if( $qtyInvoiced != $qtyShipped )
+                if( $qtyInvoiced < $qtyShipped )
                 {
                         $invoice = true;
                 }
         }
 
-        if ($shipment->getUpdatedAt() == $shipment->getCreatedAt())
+        if ($shipment->getUpdatedAt() == $shipment->getCreatedAt() && $invoice )
         {
                 $invoice = $this->helper->createInvoiceFromShipment($shipment);
         }
