@@ -75,29 +75,44 @@ class Radial_Payments_Model_Invoicing_Observer
         $shipment = $observer->getEvent()->getShipment();
         $order = $shipment->getOrder();
 
+        $params = Mage::app()->getRequest()->getParams();
+        $do_shipment = false;
+
+        if( array_key_exists("invoice", $params))
+        {
+                $invoice = $params["invoice"];
+
+                if( array_key_exists("do_shipment", $invoice))
+                {
+                        $do_shipment = $invoice["do_shipment"];
+                }
+        }
+
         $invoice = false;
         $orderItemIds = array();
         foreach( $shipment->getAllItems() as $shipItem )
         {
-                $orderItemIds[] = $shipItem->getOrderItemId();
-        }
-
-        $orderItems = Mage::getModel('sales/order_item')->getCollection()
-                                    ->addFieldToFilter('item_id', array('in' => $orderItemIds))
+                $orderItems = Mage::getModel('sales/order_item')->getCollection()
+                                    ->addFieldToFilter('item_id', array('eq' => $shipItem->getOrderItemId()))
                                     ->addFieldToFilter('order_id', array('eq' => $order->getId()));
 
-        foreach( $orderItems as $orderItem )
-        {
-                $qtyInvoiced = $orderItem->getQtyInvoiced();
-                $qtyShipped = $orderItem->getQtyShipped();
+                $orderItem = $orderItems->getFirstItem();
 
-                if( $qtyInvoiced < $qtyShipped )
+                if( $orderItem->getId())
                 {
-                        $invoice = true;
+                        $shippedQty = $shipItem->getQty();
+                        $qtyPrevInvoiced = $orderItem->getQtyInvoiced();
+                        $newQtyShipped = $orderItem->getQtyShipped() + $shippedQty;
+
+                        if( $qtyPrevInvoiced < $newQtyShipped )
+                        {
+                                $invoice = true;
+                                break;
+                        }
                 }
         }
 
-        if ($shipment->getUpdatedAt() == $shipment->getCreatedAt() && $invoice )
+        if ($shipment->getUpdatedAt() == $shipment->getCreatedAt() && $invoice && !$do_shipment )
         {
                 $invoice = $this->helper->createInvoiceFromShipment($shipment);
         }
