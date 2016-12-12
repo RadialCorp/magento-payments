@@ -189,6 +189,8 @@ class Radial_Paypal_Model_Express_Api
      */
     public function doConfirm(Varien_Object $payment, $amount)
     {
+	$amount = $payment->getAmountAuthorized();
+
         if ($amount <= 0) {
             Mage::throwException($this->helper->__('Invalid amount to confirm funds.'));
         }
