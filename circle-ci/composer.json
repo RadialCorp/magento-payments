@@ -1,7 +1,7 @@
 {
     "name": "radial/test-payments",
     "repositories": [
-        { "type": "vcs", "url": "https://github.com/RadialCorp/magento-ptf-build.git" },
+        { "type": "vcs", "url": "https://github.com/RadialCorp/magento-payments.git" },
 	{ "type": "composer", "url": "https://packages.firegento.com/" }
     ],
     "require": {
