@@ -1,7 +1,7 @@
 {
     "name": "radial/test-payments",
     "require": {
-        "radial/magento-payments": "~1.1.1.*",
+        "radial/magento-payments": "1.1.1.*",
         "magento-hackathon/magento-composer-installer": "^3"
     },
     "require-dev": {
