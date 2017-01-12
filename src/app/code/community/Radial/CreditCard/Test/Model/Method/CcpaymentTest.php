@@ -436,6 +436,7 @@ class Radial_CreditCard_Test_Model_Method_CcpaymentTest extends Radial_Core_Test
             'setShipToMainDivision' => $billingData['region_code'],
             'setShipToCountryCode' => $billingData['country'],
             'setShipToPostalCode' => $billingData['postcode'],
+	    'setSchemaVersion' => 1.1,
         ];
         /** @var ICreditCardAuthRequest $request **/
         $request = $this->getMockForAbstractClass('\eBayEnterprise\RetailOrderManagement\Payload\Payment\ICreditCardAuthRequest', [], '', true, true, true, array_keys($mockMethods));
