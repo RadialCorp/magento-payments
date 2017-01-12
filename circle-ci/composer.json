@@ -1,7 +1,7 @@
 {
     "name": "radial/test-payments",
     "require": {
-        "radial/magento-payments": "@dev",
+        "radial/magento-payments": "dev-master",
         "magento-hackathon/magento-composer-installer": "^3"
     },
     "require-dev": {
