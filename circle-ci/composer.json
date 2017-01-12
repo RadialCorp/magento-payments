@@ -5,7 +5,7 @@
 	{ "type": "composer", "url": "https://packages.firegento.com/" }
     ],
     "require": {
-        "radial/magento-payments": "dev-phase2",
+        "radial/magento-payments": "phase2",
         "magento-hackathon/magento-composer-installer": "^3"
     },
     "require-dev": {
