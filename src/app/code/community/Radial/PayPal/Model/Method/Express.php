@@ -43,7 +43,7 @@ class Radial_PayPal_Model_Method_Express extends Mage_Payment_Model_Method_Abstr
     protected $_canVoid = false;
     protected $_canUseInternal = false;
     protected $_canUseCheckout = true;
-    protected $_canUseForMultishipping = true;
+    protected $_canUseForMultishipping = false;
     protected $_canFetchTransactionInfo = true;
     protected $_canCreateBillingAgreement = false;
     protected $_canReviewPayment = true;
